@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1770742756585" clover="3.2.0">
-  <project timestamp="1770742756585" name="All files">
+<coverage generated="1770916589296" clover="3.2.0">
+  <project timestamp="1770916589296" name="All files">
     <metrics statements="260" coveredstatements="16" conditionals="80" coveredconditionals="13" methods="30" coveredmethods="1" elements="370" coveredelements="30" complexity="0" loc="260" ncloc="260" packages="1" files="3" classes="3"/>
     <file name="authController.js" path="C:\Users\Owen Ng\Documents\Code\cs4218-2520-ecom-project-cs4218-2520-team25\controllers\authController.js">
       <metrics statements="91" coveredstatements="16" conditionals="44" coveredconditionals="13" methods="8" coveredmethods="1"/>
@@ -65,14 +65,14 @@
       <line num="162" count="0" type="stmt"/>
       <line num="163" count="0" type="stmt"/>
       <line num="168" count="1" type="stmt"/>
-      <line num="169" count="2" type="stmt"/>
-      <line num="170" count="2" type="stmt"/>
-      <line num="171" count="2" type="stmt"/>
-      <line num="173" count="2" type="cond" truecount="4" falsecount="0"/>
+      <line num="169" count="4" type="stmt"/>
+      <line num="170" count="4" type="stmt"/>
+      <line num="171" count="4" type="stmt"/>
+      <line num="173" count="4" type="cond" truecount="4" falsecount="0"/>
       <line num="174" count="1" type="stmt"/>
-      <line num="176" count="1" type="cond" truecount="1" falsecount="1"/>
-      <line num="177" count="1" type="stmt"/>
-      <line num="187" count="1" type="stmt"/>
+      <line num="176" count="3" type="cond" truecount="1" falsecount="1"/>
+      <line num="177" count="3" type="stmt"/>
+      <line num="187" count="3" type="stmt"/>
       <line num="193" count="0" type="stmt"/>
       <line num="194" count="0" type="stmt"/>
       <line num="203" count="1" type="stmt"/>
