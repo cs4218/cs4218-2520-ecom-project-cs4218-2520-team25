@@ -41,38 +41,159 @@ describe("updateProfileController", () => {
     it("Should reject short password", async () => {
         const shortPasswordReq = mockReq({body: {password: "abc"}, user: {_id: 1}});
         const res = mockRes();
+
         userModel.findById.mockResolvedValue(makeUser());
+
         await updateProfileController(shortPasswordReq, res);
         
         expect(userModel.findById).toHaveBeenCalledWith(1);
         expect(res.json).toHaveBeenCalledWith({ error: "Passsword is required and 6 character long" });
 
-        // no update should occur
         expect(hashPassword).not.toHaveBeenCalled();
         expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
         expect(res.status).not.toHaveBeenCalled();
         expect(res.send).not.toHaveBeenCalled();
     })
 
-    it("Should call findById", async () => {
-        const req = mockReq({body: {password: "longpassword"}, user: {_id: 1}});
+    it("Should update name, phone, password and address successfully", async () => {
+        const req = mockReq({
+            body: {
+                name: "bobby", 
+                password: "longpassword", 
+                phone: 91234567,
+                address: {home: "yes"}
+            },
+            user: {_id: 1}});
+    
         const res = mockRes();
+
+        userModel.findById.mockResolvedValue(makeUser());
+
+        hashPassword.mockResolvedValue("hashed-longpassword")
+        
+        const updatedUser = makeUser({
+            name: "bobby", 
+            password: "hashed-longpassword", 
+            phone: 91234567,
+            address: {home: "yes"}
+        })
+        userModel.findByIdAndUpdate.mockResolvedValue(updatedUser);
+
+
         await updateProfileController(req, res);
         expect(userModel.findById).toHaveBeenCalledWith(1);
+        expect(hashPassword).toHaveBeenCalled();
+        expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
+            1,
+            {
+                name: "bobby", 
+                password: "hashed-longpassword", 
+                phone: 91234567,
+                address: {home: "yes"}
+            },
+            { new: true }
+        )
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith({
+            success: true,
+            message: "Profile Updated SUccessfully",
+            updatedUser: updatedUser
+        });
+    });
+
+    it("Should use defaults successfully", async () => {
+        const req = mockReq({
+            body: {
+                name: "bobby", 
+                phone: 91234567,
+                address: {home: "yes"}
+            },
+            user: {_id: 1}});
+    
+        const res = mockRes();
+
+        userModel.findById.mockResolvedValue(makeUser());
+        
+        const updatedUser = makeUser({
+            name: "bobby", 
+            phone: 91234567,
+            address: {home: "yes"}
+        })
+        userModel.findByIdAndUpdate.mockResolvedValue(updatedUser);
+
+
+        await updateProfileController(req, res);
+        expect(userModel.findById).toHaveBeenCalledWith(1);
+        expect(hashPassword).not.toHaveBeenCalled();
+        expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
+            1,
+            {
+                name: "bobby", 
+                password: "password", 
+                phone: 91234567,
+                address: {home: "yes"}
+            },
+            { new: true }
+        )
+
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith({
+            success: true,
+            message: "Profile Updated SUccessfully",
+            updatedUser: updatedUser
+        });
+    });
+
+        it("Should return 400 if update throws error", async () => {
+        const req = mockReq({
+            body: {
+                name: "bobby", 
+                password: "longpassword", 
+                phone: 91234567,
+                address: {home: "yes"}
+            },
+            user: {_id: 1}});
+    
+        const res = mockRes();
+
+        userModel.findById.mockResolvedValue(makeUser());
+
+        hashPassword.mockResolvedValue("hashed-longpassword")
+        
+        const updatedUser = makeUser({
+            name: "bobby", 
+            password: "hashed-longpassword", 
+            phone: 91234567,
+            address: {home: "yes"}
+        });
+
+        const error = Error("User update failed!");
+        userModel.findByIdAndUpdate.mockRejectedValue(error);
+
+
+        await updateProfileController(req, res);
+        expect(userModel.findById).toHaveBeenCalledWith(1);
+        expect(hashPassword).toHaveBeenCalled();
+        expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith(
+            1,
+            {
+                name: "bobby", 
+                password: "hashed-longpassword", 
+                phone: 91234567,
+                address: {home: "yes"}
+            },
+            { new: true }
+        )
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error WHile Update profile",
+            error,
+        });
     })
 
-    it("Should call hashPassword if password is present", async () => {
-        const req = mockReq({body: {password: "longpassword"}, user: {_id: 1}});
-        const res = mockRes();
-        await updateProfileController(req, res);
-        expect(hashPassword).toHaveBeenCalledWith("longpassword");
-    })
 
-    it("Should call findByIdAndUpdate if password is present", async () => {
-        const req = mockReq({body: {password: "longpassword"}, user: {_id: 1}});
-        const res = mockRes();
-        await updateProfileController(req, res);
-        expect(userModel.findByIdAndUpdate).toHaveBeenCalled();
-    })
 
 })
