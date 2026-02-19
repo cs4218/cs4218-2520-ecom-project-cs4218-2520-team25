@@ -1,10 +1,12 @@
 import { updateProfileController, getOrdersController, getAllOrdersController, orderStatusController } from "../controllers/authController.js";
 
 jest.mock("../models/userModel.js");
+jest.mock("../models/orderModel.js");
 jest.mock("../helpers/authHelper.js");
 jest.mock("jsonwebtoken");
 
 import userModel from "../models/userModel.js";
+import orderModel from "../models/orderModel.js";
 import { hashPassword } from "../helpers/authHelper.js";
 
 const mockReq = (overrides = {}) => ({
@@ -32,6 +34,27 @@ const makeUser = (overrides = {}) => ({
         role: 0,
         ...overrides
     });
+
+const makeOrder = (overrides = {}) => ({
+  _id: "order-1",
+  products: [
+    {
+      _id: "prod-1",
+      name: "Laptop",
+      price: 2000
+    }
+  ],
+  buyer: {
+    _id: 1,
+    name: "Bob"
+  },
+  payment: { method: "card", amount: 2000 },
+  status: "Processing",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides
+});
+
 
 describe("updateProfileController", () => {
     beforeEach(() => {
@@ -193,7 +216,44 @@ describe("updateProfileController", () => {
             error,
         });
     })
+})
 
+describe("getOrdersController", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
 
+    it("Should get orders successfully", async () => {
+        const fakeOrders = [makeOrder()]
+        orderModel.find.mockImplementation(() => ({
+            populate: jest.fn().mockReturnThis(),
+            then: (resolve) => resolve(fakeOrders),
+        }));
 
+        const req = mockReq();
+        const res = mockRes();
+
+        await getOrdersController(req, res)
+
+        expect(res.json).toHaveBeenCalledWith(fakeOrders)
+    })
+
+    it("Should throw 500 when there is an error", async () => {
+        const error = Error("Invalid User ID");
+        orderModel.find.mockImplementation(() => ({
+            populate: jest.fn().mockReturnThis(),
+            then: (_resolve, reject) => reject(error)
+        }));
+        const req = mockReq({user: {_id: 1}});
+        const res = mockRes();
+
+        await getOrdersController(req, res)
+
+        expect(res.status).toHaveBeenCalledWith(500)
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error WHile Geting Orders",
+            error,
+        })
+    })
 })

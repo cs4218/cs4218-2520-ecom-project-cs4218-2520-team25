@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1771307095261" clover="3.2.0">
-  <project timestamp="1771307095261" name="All files">
-    <metrics statements="260" coveredstatements="18" conditionals="80" coveredconditionals="11" methods="30" coveredmethods="1" elements="370" coveredelements="30" complexity="0" loc="260" ncloc="260" packages="1" files="3" classes="3"/>
+<coverage generated="1771493528608" clover="3.2.0">
+  <project timestamp="1771493528608" name="All files">
+    <metrics statements="260" coveredstatements="23" conditionals="80" coveredconditionals="11" methods="30" coveredmethods="2" elements="370" coveredelements="36" complexity="0" loc="260" ncloc="260" packages="1" files="3" classes="3"/>
     <file name="authController.js" path="/Users/owenyeoo/Desktop/Code/cs4218-2520-ecom-project-cs4218-2520-team25/controllers/authController.js">
-      <metrics statements="91" coveredstatements="18" conditionals="44" coveredconditionals="11" methods="8" coveredmethods="1"/>
+      <metrics statements="91" coveredstatements="23" conditionals="44" coveredconditionals="11" methods="8" coveredmethods="2"/>
       <line num="7" count="1" type="stmt"/>
       <line num="8" count="0" type="stmt"/>
       <line num="9" count="0" type="stmt"/>
@@ -76,11 +76,11 @@
       <line num="193" count="1" type="stmt"/>
       <line num="194" count="1" type="stmt"/>
       <line num="203" count="1" type="stmt"/>
-      <line num="204" count="0" type="stmt"/>
-      <line num="205" count="0" type="stmt"/>
-      <line num="209" count="0" type="stmt"/>
-      <line num="211" count="0" type="stmt"/>
-      <line num="212" count="0" type="stmt"/>
+      <line num="204" count="2" type="stmt"/>
+      <line num="205" count="2" type="stmt"/>
+      <line num="209" count="1" type="stmt"/>
+      <line num="211" count="1" type="stmt"/>
+      <line num="212" count="1" type="stmt"/>
       <line num="220" count="1" type="stmt"/>
       <line num="221" count="0" type="stmt"/>
       <line num="222" count="0" type="stmt"/>
