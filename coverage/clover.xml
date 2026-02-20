@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1771601457196" clover="3.2.0">
-  <project timestamp="1771601457196" name="All files">
+<coverage generated="1771602130258" clover="3.2.0">
+  <project timestamp="1771602130258" name="All files">
     <metrics statements="260" coveredstatements="35" conditionals="80" coveredconditionals="11" methods="30" coveredmethods="4" elements="370" coveredelements="50" complexity="0" loc="260" ncloc="260" packages="1" files="3" classes="3"/>
     <file name="authController.js" path="C:\Users\Owen Ng\Documents\Code\cs4218-2520-ecom-project-cs4218-2520-team25\controllers\authController.js">
       <metrics statements="91" coveredstatements="35" conditionals="44" coveredconditionals="11" methods="8" coveredmethods="4"/>

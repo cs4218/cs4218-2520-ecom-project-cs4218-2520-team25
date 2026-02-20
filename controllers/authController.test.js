@@ -70,13 +70,14 @@ describe("updateProfileController", () => {
         await updateProfileController(shortPasswordReq, res);
         
         expect(userModel.findById).toHaveBeenCalledWith(1);
-        expect(res.json).toHaveBeenCalledWith({ error: "Passsword is required and 6 character long" });
+        expect(res.json).toHaveBeenCalledWith({ error: "Password is required and at least 6 characters long" });
 
         expect(hashPassword).not.toHaveBeenCalled();
         expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
         expect(res.status).not.toHaveBeenCalled();
         expect(res.send).not.toHaveBeenCalled();
-    })
+    });
+
 
     it("Should update name, phone, password and address successfully", async () => {
         const req = mockReq({
@@ -120,7 +121,7 @@ describe("updateProfileController", () => {
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.send).toHaveBeenCalledWith({
             success: true,
-            message: "Profile Updated SUccessfully",
+            message: "Profile Updated Successfully",
             updatedUser: updatedUser
         });
     });
@@ -163,7 +164,7 @@ describe("updateProfileController", () => {
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.send).toHaveBeenCalledWith({
             success: true,
-            message: "Profile Updated SUccessfully",
+            message: "Profile Updated Successfully",
             updatedUser: updatedUser
         });
     });
@@ -212,7 +213,7 @@ describe("updateProfileController", () => {
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.send).toHaveBeenCalledWith({
             success: false,
-            message: "Error WHile Update profile",
+            message: "Error While Updating profile",
             error,
         });
     })
@@ -262,7 +263,7 @@ describe("getOrdersController", () => {
         expect(res.status).toHaveBeenCalledWith(500)
         expect(res.send).toHaveBeenCalledWith({
             success: false,
-            message: "Error WHile Geting Orders",
+            message: "Error While Getting Orders",
             error,
         });
 
@@ -328,7 +329,7 @@ describe("getAllOrdersController", () => {
         expect(res.status).toHaveBeenCalledWith(500)
         expect(res.send).toHaveBeenCalledWith({
             success: false,
-            message: "Error WHile Geting Orders",
+            message: "Error While Getting Orders",
             error,
         });
     })
@@ -377,7 +378,7 @@ describe("orderStatusController", () => {
         expect(res.status).toHaveBeenCalledWith(500);
         expect(res.send).toHaveBeenCalledWith({
             success: false,
-            message: "Error While Updateing Order",
+            message: "Error While Updating Order",
             error: err,
         });
         expect(res.json).not.toHaveBeenCalled();
