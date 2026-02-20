@@ -77,6 +77,23 @@ describe("updateProfileController", () => {
         expect(res.status).not.toHaveBeenCalled();
         expect(res.send).not.toHaveBeenCalled();
     });
+    
+    it("Should reject empty password", async () => {
+        const shortPasswordReq = mockReq({body: {password: ""}, user: {_id: 1}});
+        const res = mockRes();
+
+        userModel.findById.mockResolvedValue(makeUser());
+
+        await updateProfileController(shortPasswordReq, res);
+        
+        expect(userModel.findById).toHaveBeenCalledWith(1);
+        expect(res.json).toHaveBeenCalledWith({ error: "Password is required and at least 6 characters long" });
+
+        expect(hashPassword).not.toHaveBeenCalled();
+        expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
+        expect(res.send).not.toHaveBeenCalled();
+    });
 
 
     it("Should update name, phone, password and address successfully", async () => {
