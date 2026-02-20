@@ -225,35 +225,111 @@ describe("getOrdersController", () => {
 
     it("Should get orders successfully", async () => {
         const fakeOrders = [makeOrder()]
-        orderModel.find.mockImplementation(() => ({
+        const query = {
             populate: jest.fn().mockReturnThis(),
             then: (resolve) => resolve(fakeOrders),
-        }));
+        }
+        orderModel.find.mockReturnValue(query);
 
-        const req = mockReq();
+        const req = mockReq({user:{_id:1}});
         const res = mockRes();
 
-        await getOrdersController(req, res)
+        await getOrdersController(req, res);
+
+        expect(orderModel.find).toHaveBeenCalledWith({buyer: 1});
+        expect(query.populate).toHaveBeenNthCalledWith(1, "products", "-photo");
+        expect(query.populate).toHaveBeenNthCalledWith(2, "buyer", "name");
 
         expect(res.json).toHaveBeenCalledWith(fakeOrders)
     })
 
     it("Should throw 500 when there is an error", async () => {
         const error = Error("Invalid User ID");
-        orderModel.find.mockImplementation(() => ({
+        const query = {
             populate: jest.fn().mockReturnThis(),
             then: (_resolve, reject) => reject(error)
-        }));
+        };
+        orderModel.find.mockReturnValue(query);
         const req = mockReq({user: {_id: 1}});
         const res = mockRes();
 
         await getOrdersController(req, res)
+
+        expect(orderModel.find).toHaveBeenCalledWith({buyer: 1});
+        expect(query.populate).toHaveBeenNthCalledWith(1, "products", "-photo");
+        expect(query.populate).toHaveBeenNthCalledWith(2, "buyer", "name");
 
         expect(res.status).toHaveBeenCalledWith(500)
         expect(res.send).toHaveBeenCalledWith({
             success: false,
             message: "Error WHile Geting Orders",
             error,
-        })
+        });
+
+        expect(res.json).not.toHaveBeenCalled();
     })
+
+describe("getAllOrdersController", () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it("should fetch all orders, populate products and buyer, sort by createdAt desc, and return via res.json", async () => {
+        // arrange
+        const fakeOrders = [
+            makeOrder({ _id: "order-1" }),
+            makeOrder({ _id: "order-2", status: "Shipped" }),
+        ];
+
+        const req = mockReq();
+        const res = mockRes();
+
+        const query = {
+            populate: jest.fn().mockReturnThis(),
+            sort: jest.fn().mockReturnThis(),
+            then: (resolve) => resolve(fakeOrders),
+        };
+        orderModel.find.mockReturnValue(query);
+
+        // act
+        await getAllOrdersController(req, res);
+
+        // assert: query chain
+        expect(orderModel.find).toHaveBeenCalledWith({});
+        expect(query.populate).toHaveBeenNthCalledWith(1, "products", "-photo");
+        expect(query.populate).toHaveBeenNthCalledWith(2, "buyer", "name");
+        expect(query.sort).toHaveBeenCalledWith({ createdAt: "-1" });
+
+        // assert: response
+        expect(res.json).toHaveBeenCalledWith(fakeOrders);
+        expect(res.status).not.toHaveBeenCalled();
+        expect(res.send).not.toHaveBeenCalled();
+    });
+    it("Should throw 500 when there is an error", async () => {
+        const error = Error("Invalid User ID");
+        const query = {
+            populate: jest.fn().mockReturnThis(),
+            sort: jest.fn().mockReturnThis(),
+            then: (_resolve, reject) => reject(error),
+        };
+
+        orderModel.find.mockReturnValue(query);
+        const req = mockReq();
+        const res = mockRes();
+
+        await getAllOrdersController(req, res)
+
+        expect(orderModel.find).toHaveBeenCalledWith({});
+        expect(query.populate).toHaveBeenNthCalledWith(1, "products", "-photo");
+        expect(query.populate).toHaveBeenNthCalledWith(2, "buyer", "name");
+        expect(query.sort).toHaveBeenCalledWith({ createdAt: "-1" });
+
+        expect(res.status).toHaveBeenCalledWith(500)
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error WHile Geting Orders",
+            error,
+        });
+    })
+})
 })
