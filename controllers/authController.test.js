@@ -268,6 +268,7 @@ describe("getOrdersController", () => {
 
         expect(res.json).not.toHaveBeenCalled();
     })
+});
 
 describe("getAllOrdersController", () => {
     beforeEach(() => {
@@ -331,5 +332,54 @@ describe("getAllOrdersController", () => {
             error,
         });
     })
-})
+});
+
+describe("orderStatusController", () => {
+    beforeEach(()=> {
+        jest.clearAllMocks();
+    });
+
+    it("should update order status when given orderId and status", async () => {
+        const res = mockRes();
+        const req = mockReq({
+            params: { orderId: "order-123" },
+            body: { status: "Completed"}, 
+        });
+
+        const updated = makeOrder({ _id: "order-123", status: "Completed" });
+        orderModel.findByIdAndUpdate.mockResolvedValue(updated);
+
+        await orderStatusController(req, res);
+
+        expect(orderModel.findByIdAndUpdate).toHaveBeenCalledWith(
+            "order-123",
+            { status: "Completed" },
+            {new: true}
+        );
+        expect(res.json).toHaveBeenCalledWith(updated);
+    });
+
+    it("should catch synchronous throws from findByIdAndUpdate and return 500", async () => {
+        // Rare, but useful to prove try/catch catches sync throws too.
+        const req = mockReq({
+            params: { orderId: "order-123" },
+            body: { status: "Processing" },
+        });
+        const res = mockRes();
+
+        const err = new Error("sync throw");
+        orderModel.findByIdAndUpdate.mockImplementation(() => {
+            throw err;
+        });
+
+        await orderStatusController(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error While Updateing Order",
+            error: err,
+        });
+        expect(res.json).not.toHaveBeenCalled();
+    });
 })
