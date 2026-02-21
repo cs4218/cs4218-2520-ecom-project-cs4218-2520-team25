@@ -1,5 +1,7 @@
 import categoryModel from "../models/categoryModel.js";
 import slugify from "slugify";
+
+// Danielle Loh, A0257220N
 export const createCategoryController = async (req, res) => {
   try {
     const { name } = req.body;
@@ -10,7 +12,7 @@ export const createCategoryController = async (req, res) => {
     if (existingCategory) {
       return res.status(200).send({
         success: true,
-        message: "Category Already Exisits",
+        message: "Category Already Exists",
       });
     }
     const category = await new categoryModel({
@@ -26,13 +28,14 @@ export const createCategoryController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      errro,
-      message: "Errro in Category",
+      error,
+      message: "Error in Category",
     });
   }
 };
 
-//update category
+// update category
+// Danielle Loh, A0257220N
 export const updateCategoryController = async (req, res) => {
   try {
     const { name } = req.body;
@@ -44,7 +47,7 @@ export const updateCategoryController = async (req, res) => {
     );
     res.status(200).send({
       success: true,
-      messsage: "Category Updated Successfully",
+      message: "Category Updated Successfully",
       category,
     });
   } catch (error) {
@@ -95,14 +98,15 @@ export const singleCategoryController = async (req, res) => {
   }
 };
 
-//delete category
+// delete category
+// Danielle Loh, A0257220N
 export const deleteCategoryCOntroller = async (req, res) => {
   try {
     const { id } = req.params;
     await categoryModel.findByIdAndDelete(id);
     res.status(200).send({
       success: true,
-      message: "Categry Deleted Successfully",
+      message: "Category Deleted Successfully",
     });
   } catch (error) {
     console.log(error);
