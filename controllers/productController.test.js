@@ -192,7 +192,7 @@ afterEach(() => {
     jest.restoreAllMocks();
 });
 
-describe('createProductController', () => {
+describe('getProductController', () => {
     test('returns list of products', async () => {
         const fakeProducts = [
             { name: 'Test Product' }
@@ -248,7 +248,72 @@ describe('createProductController', () => {
             error: mockError,
         });
     });
-})
+});
+
+let getSingleProductController;
+
+beforeAll(async () => {
+    const mod = await import ("./productController.js");
+    getSingleProductController = mod.getSingleProductController;
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
+afterEach(() => {
+    jest.restoreAllMocks();
+});
+
+describe('getSingleProductController', () => {
+    test('returns a single product', async () => {
+        const fakeProduct = { name: 'Test Product' };
+
+        const mockPopulate = jest.fn().mockResolvedValue(fakeProduct);
+        const mockSelect = jest.fn().mockReturnValue({ populate: mockPopulate });
+        productModel.findOne.mockReturnValue({ select: mockSelect });
+
+        const req = { params: { slug: "test product" } };
+        const res = makeRes();
+
+        await getSingleProductController(req, res);
+
+        expect(productModel.findOne).toHaveBeenCalledWith({ slug: "test product" });
+        expect(mockSelect).toHaveBeenCalledWith("-photo");
+        expect(mockPopulate).toHaveBeenCalledWith("category");
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith({
+            success: true,
+            message: "Single Product Fetched",
+            product: fakeProduct,
+        });
+    });
+
+    test('handles errors', async () => {
+        const mockError = new Error("[getSingleProductController] DB Error");
+
+        const consoleSpy = jest
+            .spyOn(console, "log")
+            .mockImplementation(() => {});
+
+        productModel.findOne.mockImplementation(() => {
+            throw mockError
+        });
+
+        const req = { params: { slug: "test product" } }
+        const res = makeRes();
+
+        await getSingleProductController(req, res);
+
+        expect(consoleSpy).toHaveBeenCalledWith(mockError);
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error while getting single product",
+            error: mockError,
+        });
+    });
+});
 
 let deleteProductController;
 beforeAll(async () => {
