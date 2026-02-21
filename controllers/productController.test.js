@@ -176,6 +176,80 @@ describe("createProductController", () => {
     });
 });
 
+// Danielle Loh, A0257220N
+let getProductController;
+
+beforeAll(async () => {
+    const mod = await import ("./productController.js");
+    getProductController = mod.getProductController;
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
+afterEach(() => {
+    jest.restoreAllMocks();
+});
+
+describe('createProductController', () => {
+    test('returns list of products', async () => {
+        const fakeProducts = [
+            { name: 'Test Product' }
+        ];
+
+        const sortMock = jest.fn().mockResolvedValue(fakeProducts);
+        const limitMock = jest.fn().mockReturnValue({ sort: sortMock });
+        const selectMock = jest.fn().mockReturnValue({ limit: limitMock });
+        const populateMock = jest.fn().mockReturnValue({ select: selectMock});
+
+        productModel.find.mockReturnValue({ populate: populateMock });
+
+        const req = {}
+        const res = makeRes();
+
+        await getProductController(req, res);
+
+        expect(productModel.find).toHaveBeenCalledWith({});
+        expect(populateMock).toHaveBeenCalledWith("category");
+        expect(selectMock).toHaveBeenCalledWith("-photo");
+        expect(limitMock).toHaveBeenCalledWith(12)
+        expect(sortMock).toHaveBeenCalledWith({ createdAt: -1 });
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith({
+            success: true,
+            counTotal: 1,
+            message: "All Products ",
+            products: fakeProducts,
+        });
+    });
+
+    test('handles errors', async () => {
+        const mockError = new Error("[createProductController] DB error");
+
+        const consoleSpy = jest
+            .spyOn(console, "log")
+            .mockImplementation(() => {});
+
+        productModel.find.mockImplementation(() => {
+            throw mockError
+        });
+
+        const req = {};
+        const res = makeRes();
+
+        await getProductController(req, res);
+
+        expect(consoleSpy).toHaveBeenCalledWith(mockError);
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error in getting products",
+            error: mockError,
+        });
+    });
+})
+
 let deleteProductController;
 beforeAll(async () => {
     // dynamic import AFTER mocks are registered

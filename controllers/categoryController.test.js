@@ -6,7 +6,6 @@ import {
 
 import categoryModel from "../models/categoryModel.js";
 import slugify from "slugify";
-import { afterEach } from "node:test";
 
 jest.mock("../models/categoryModel.js");
 jest.mock("slugify");
