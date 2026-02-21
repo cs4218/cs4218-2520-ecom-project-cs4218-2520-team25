@@ -1,13 +1,13 @@
-import { updateProfileController, getOrdersController, getAllOrdersController, orderStatusController } from "../controllers/authController.js";
+import { updateProfileController, getOrdersController, getAllOrdersController, orderStatusController, registerController, loginController, forgotPasswordController, testController } from "../controllers/authController.js";
+import userModel from "../models/userModel.js";
+import orderModel from "../models/orderModel.js";
+import { hashPassword, comparePassword } from "../helpers/authHelper.js";
+import JWT from "jsonwebtoken"
 
 jest.mock("../models/userModel.js");
 jest.mock("../models/orderModel.js");
 jest.mock("../helpers/authHelper.js");
 jest.mock("jsonwebtoken");
-
-import userModel from "../models/userModel.js";
-import orderModel from "../models/orderModel.js";
-import { hashPassword } from "../helpers/authHelper.js";
 
 const mockReq = (overrides = {}) => ({
     body: {},
@@ -401,3 +401,362 @@ describe("orderStatusController", () => {
         expect(res.json).not.toHaveBeenCalled();
     });
 })
+
+
+describe("Auth Controllers", () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = { body: {} };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+    jest.clearAllMocks();
+  });
+
+  describe("registerController", () => {
+    // Equivalence Partitioning: Validation Failures
+    test("should return error if name is missing", async () => {
+      // Arrange
+      req.body = {};
+
+      // Act
+      await registerController(req, res);
+
+      // Assert
+      expect(res.send).toHaveBeenCalledWith({ message: "Name is Required" });
+
+    });
+
+    test("should return error if email is missing", async () => {
+      // Arrange
+      req.body = { name: "Kailash" };
+
+      // Act
+      await registerController(req, res);
+
+      // Assert
+      expect(res.send).toHaveBeenCalledWith({ message: "Email is Required" });
+
+    });
+
+    test("should return error if password is missing", async () => {
+      // Arrange
+      req.body = { name: "Kailash", email: "test@test.com" };
+
+      // Act
+      await registerController(req, res);
+
+      // Assert
+      expect(res.send).toHaveBeenCalledWith({ message: "Password is Required" });
+    });
+
+    test("should return error if phone is missing", async () => {
+      // Arrange
+      req.body = { name: "Kailash", email: "test@test.com", password: "123" };
+
+      // Act
+      await registerController(req, res);
+
+      // Assert
+      expect(res.send).toHaveBeenCalledWith({ message: "Phone no is Required" });
+
+    });
+
+    test("should return error if address is missing", async () => {
+      // Arrange
+      req.body = { name: "Kailash", email: "test@test.com", password: "123", phone: "123" };
+
+      // Act
+      await registerController(req, res);
+
+      // Assert
+      expect(res.send).toHaveBeenCalledWith({ message: "Address is Required" });
+
+    });
+
+    test("should return error if answer is missing", async () => {
+      // Arrange
+      req.body = { name: "Kailash", email: "test@test.com", password: "123", phone: "123", address: "SG" };
+
+      // Act
+      await registerController(req, res);
+
+      // Assert
+      expect(res.send).toHaveBeenCalledWith({ message: "Answer is Required" });
+    });
+      
+
+    // Boundary Value Analysis: Existing User
+    test("should return 200 if user already exists", async () => {
+      // Arrange
+      req.body = { name: "Kailash", email: "existing@test.com", password: "123", phone: "123", address: "SG", answer: "blue" };
+      userModel.findOne.mockResolvedValue({ email: "existing@test.com" });
+
+      // Act
+      await registerController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "User already registered please login" }));
+    });
+
+    test("should register user successfully", async () => {
+      // Arrange
+      const userData = { name: "Kailash", email: "new@test.com", password: "123", phone: "123", address: "SG", answer: "blue" };
+      req.body = userData;
+      userModel.findOne.mockResolvedValue(null);
+      hashPassword.mockResolvedValue("hashedPwd");
+      
+      const saveSpy = jest.fn().mockResolvedValue({ ...userData, password: "hashedPwd" });
+      userModel.prototype.save = saveSpy; 
+
+      // Act
+      await registerController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
+    });
+
+    // Boundary Value Analysis/Equivalence Partitioning: Registration failed
+    test("should return error if registration fails", async () => {
+      // Arrange
+      const userData = { name: "Kailash", email: "new@test.com", password: "123", phone: "123", address: "SG", answer: "blue" };
+      req.body = userData;
+      userModel.findOne.mockResolvedValue(null);
+      hashPassword.mockResolvedValue("hashedPwd");
+      
+      
+      const saveSpy = jest.fn().mockRejectedValue(new Error("Registration failed"));
+      userModel.prototype.save = saveSpy; 
+
+      // Act
+      await registerController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ success: false, message: "Error in Registeration" }));
+    });
+  });
+
+  
+  describe("loginController", () => {
+    // Invalid password
+    test("should return 200 and success false for invalid password", async () => {
+      // Arrange
+      req.body = { email: "test@test.com", password: "wrong" };
+      userModel.findOne.mockResolvedValue(makeUser());
+      comparePassword.mockResolvedValue(false);
+
+      // Act
+      await loginController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Invalid Password" }));
+    });
+
+    // Successful login
+    test("should return 200 and token on successful login", async () => {
+      // Arrange
+      req.body = { email: "test@test.com", password: "right" };
+      userModel.findOne.mockResolvedValue(makeUser());
+      comparePassword.mockResolvedValue(true);
+      JWT.sign.mockReturnValue("mockToken");
+
+      // Act
+      await loginController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ token: "mockToken", success: true }));
+    });
+
+    // Missing password
+    test("should return 400 if password is missing", async () => {
+      // Arrange
+      req.body = { email: "test@test.com" }; 
+
+      // Act
+      await loginController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Email and password is required" }));
+    });
+
+    // User not regiestered
+    test("should return 400 if user is not registered", async () => {
+      // Arrange
+      req.body = { email: "nonexistent@test.com", password: "password" };
+      userModel.findOne.mockResolvedValue(null);
+
+      // Act
+      await loginController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Email is not registerd" }));
+    });
+
+    // Error during login
+    test("should return 500 if an error occurs during login", async () => {
+      // Arrange
+      req.body = { email: "test@test.com", password: "password" };
+      userModel.findOne.mockRejectedValue(new Error("Database error"));
+
+      // Act
+      await loginController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(500);
+    });
+  });
+
+  
+  describe("forgotPasswordController", () => {
+    // Invalid details
+    test("should return 401 if user not found with provided email and answer", async () => {
+      // Arrange
+      req.body = { email: "test@test.com", answer: "wrong", newPassword: "new" };
+      userModel.findOne.mockResolvedValue(null);
+
+      // Act
+      await forgotPasswordController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Wrong Email Or Answer" }));
+    });
+
+    test("should reset password successfully", async () => {
+      // Arrange
+      req.body = { email: "test@test.com", answer: "blue", newPassword: "new" };
+      userModel.findOne.mockResolvedValue({ _id: "123" });
+      hashPassword.mockResolvedValue("newHashed");
+      userModel.findByIdAndUpdate.mockResolvedValue({ _id: "123", password: "newHashed" });
+
+      // Act
+      await forgotPasswordController(req, res);
+
+      // Assert
+      expect(userModel.findByIdAndUpdate).toHaveBeenCalledWith("123", { password: "newHashed" });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Password Reset Successfully" }));
+    });
+
+    // Missing email
+    test("should return 400 if email is missing", async () => {
+      // Arrange
+      req.body = { answer: "blue", newPassword: "new" };
+
+      // Act
+      await forgotPasswordController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Emai is required" }));
+    });
+
+    // Missing answer
+    test("should return 400 if answer is missing", async () => {
+      // Arrange
+      req.body = { email: "test@test.com", newPassword: "new" };
+
+      // Act
+      await forgotPasswordController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "answer is required" }));
+    });
+
+    // Missing newPassword
+    test("should return 400 if newPassword is missing", async () => {
+      // Arrange
+      req.body = { email: "test@test.com", answer: "blue" };
+
+      // Act
+      await forgotPasswordController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "New Password is required" }));
+    });
+
+    // Missing answer
+    test("should return 400 if answer is missing", async () => {
+      // Arrange
+      req.body = { email: "test@test.com", newPassword: "new" };
+
+      // Act
+      await forgotPasswordController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "answer is required" }));
+    });
+
+    // Missing email
+    test("should return 400 if email is missing", async () => {
+      // Arrange
+      req.body = { answer: "blue", newPassword: "new" };
+
+      // Act
+      await forgotPasswordController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Emai is required" }));
+    });
+
+    // Error in password reset
+    test("should return 500 if an error occurs during password reset", async () => {
+      // Arrange
+      req.body = { email: "test@test.com", answer: "blue", newPassword: "new" };
+      userModel.findOne.mockRejectedValue(new Error("Database error"));
+
+      // Act
+      await forgotPasswordController(req, res);
+
+      // Assert
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Something went wrong" }));
+    });
+  });
+
+
+  describe("testController", () => {
+
+    test("should send 'Protected Routes' string on successful execution", () => {
+      // --- Arrange ---
+
+      // --- Act ---
+      testController(req, res);
+
+      // --- Assert ---
+      expect(res.send).toHaveBeenCalledWith("Protected Routes");
+    });
+
+    test("should send error object if an exception occurs", () => {
+        // --- Arrange ---
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+      const mockError = new Error("Test Error");
+      res.send.mockImplementationOnce(() => {
+        throw mockError;
+      });
+
+      // --- Act ---
+      testController(req, res);
+
+      // --- Assert ---
+      expect(consoleSpy).toHaveBeenCalledWith(mockError);
+      expect(res.send).toHaveBeenCalledWith({ error: mockError });
+
+      consoleSpy.mockRestore();
+    });
+  });
+
+});
