@@ -6,6 +6,7 @@ import {
 
 import categoryModel from "../models/categoryModel.js";
 import slugify from "slugify";
+import { error } from "console";
 
 jest.mock("../models/categoryModel.js");
 jest.mock("slugify");
@@ -108,3 +109,62 @@ describe("createCategoryController", () => {
     consoleSpy.mockRestore();
   });
 });
+
+// Danielle Loh, A0257220N
+describe("updateCategoryController", () => {
+  test('updates category successfully', async () => {
+    const req = mockRequest(
+      { name: 'Electronics' },
+      { id: '123' }
+    );
+    const res = mockResponse();
+
+    slugify.mockReturnValue('electronics');
+    categoryModel.findByIdAndUpdate.mockResolvedValue({
+      name: 'Electronics',
+      slug: 'electronics',
+    });
+
+    await updateCategoryController(req, res);
+
+    expect(categoryModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      '123',
+      { name: 'Electronics', slug: 'electronics' },
+      { new: true }
+    );
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+        message: "Category Updated Successfully",
+      })
+    );
+  });
+
+  test('handles errors', async () => {
+    const req = mockRequest(
+      { name: 'Electronics' },
+      { id: '123' }
+    );
+    const res = mockResponse();
+
+    const consoleSpy = jest
+      .spyOn(console, "log")
+      .mockImplementation(() => {});
+    
+    const mockError = new Error('DB Error');
+    categoryModel.findByIdAndUpdate.mockRejectedValue(mockError);
+
+    await updateCategoryController(req, res);
+
+    expect(consoleSpy).toHaveBeenCalledWith(mockError);
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send).toHaveBeenCalledWith({
+      success: false,
+      error: mockError,
+      message: "Error while updating category",
+    });
+
+    consoleSpy.mockRestore();
+  });
+})
