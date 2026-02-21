@@ -70,13 +70,31 @@ describe("updateProfileController", () => {
         await updateProfileController(shortPasswordReq, res);
         
         expect(userModel.findById).toHaveBeenCalledWith(1);
-        expect(res.json).toHaveBeenCalledWith({ error: "Passsword is required and 6 character long" });
+        expect(res.json).toHaveBeenCalledWith({ error: "Password is required and at least 6 characters long" });
 
         expect(hashPassword).not.toHaveBeenCalled();
         expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
         expect(res.status).not.toHaveBeenCalled();
         expect(res.send).not.toHaveBeenCalled();
-    })
+    });
+    
+    it("Should reject empty password", async () => {
+        const shortPasswordReq = mockReq({body: {password: ""}, user: {_id: 1}});
+        const res = mockRes();
+
+        userModel.findById.mockResolvedValue(makeUser());
+
+        await updateProfileController(shortPasswordReq, res);
+        
+        expect(userModel.findById).toHaveBeenCalledWith(1);
+        expect(res.json).toHaveBeenCalledWith({ error: "Password is required and at least 6 characters long" });
+
+        expect(hashPassword).not.toHaveBeenCalled();
+        expect(userModel.findByIdAndUpdate).not.toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
+        expect(res.send).not.toHaveBeenCalled();
+    });
+
 
     it("Should update name, phone, password and address successfully", async () => {
         const req = mockReq({
@@ -120,7 +138,7 @@ describe("updateProfileController", () => {
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.send).toHaveBeenCalledWith({
             success: true,
-            message: "Profile Updated SUccessfully",
+            message: "Profile Updated Successfully",
             updatedUser: updatedUser
         });
     });
@@ -163,7 +181,7 @@ describe("updateProfileController", () => {
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.send).toHaveBeenCalledWith({
             success: true,
-            message: "Profile Updated SUccessfully",
+            message: "Profile Updated Successfully",
             updatedUser: updatedUser
         });
     });
@@ -212,7 +230,7 @@ describe("updateProfileController", () => {
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.send).toHaveBeenCalledWith({
             success: false,
-            message: "Error WHile Update profile",
+            message: "Error While Updating profile",
             error,
         });
     })
@@ -262,12 +280,13 @@ describe("getOrdersController", () => {
         expect(res.status).toHaveBeenCalledWith(500)
         expect(res.send).toHaveBeenCalledWith({
             success: false,
-            message: "Error WHile Geting Orders",
+            message: "Error While Getting Orders",
             error,
         });
 
         expect(res.json).not.toHaveBeenCalled();
     })
+});
 
 describe("getAllOrdersController", () => {
     beforeEach(() => {
@@ -327,9 +346,58 @@ describe("getAllOrdersController", () => {
         expect(res.status).toHaveBeenCalledWith(500)
         expect(res.send).toHaveBeenCalledWith({
             success: false,
-            message: "Error WHile Geting Orders",
+            message: "Error While Getting Orders",
             error,
         });
     })
-})
+});
+
+describe("orderStatusController", () => {
+    beforeEach(()=> {
+        jest.clearAllMocks();
+    });
+
+    it("should update order status when given orderId and status", async () => {
+        const res = mockRes();
+        const req = mockReq({
+            params: { orderId: "order-123" },
+            body: { status: "Completed"}, 
+        });
+
+        const updated = makeOrder({ _id: "order-123", status: "Completed" });
+        orderModel.findByIdAndUpdate.mockResolvedValue(updated);
+
+        await orderStatusController(req, res);
+
+        expect(orderModel.findByIdAndUpdate).toHaveBeenCalledWith(
+            "order-123",
+            { status: "Completed" },
+            {new: true}
+        );
+        expect(res.json).toHaveBeenCalledWith(updated);
+    });
+
+    it("should catch synchronous throws from findByIdAndUpdate and return 500", async () => {
+        // Rare, but useful to prove try/catch catches sync throws too.
+        const req = mockReq({
+            params: { orderId: "order-123" },
+            body: { status: "Processing" },
+        });
+        const res = mockRes();
+
+        const err = new Error("sync throw");
+        orderModel.findByIdAndUpdate.mockImplementation(() => {
+            throw err;
+        });
+
+        await orderStatusController(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error While Updating Order",
+            error: err,
+        });
+        expect(res.json).not.toHaveBeenCalled();
+    });
 })
