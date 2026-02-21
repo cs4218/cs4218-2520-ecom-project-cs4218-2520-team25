@@ -111,6 +111,7 @@ export const getSingleProductController = async (req, res) => {
 };
 
 // get photo
+// Danielle Loh, A0257220N
 export const productPhotoController = async (req, res) => {
   try {
     const product = await productModel.findById(req.params.pid).select("photo");
@@ -122,7 +123,7 @@ export const productPhotoController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Erorr while getting photo",
+      message: "Error while getting photo",
       error,
     });
   }

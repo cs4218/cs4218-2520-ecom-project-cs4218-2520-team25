@@ -43,6 +43,7 @@ const makeRes = () => {
     const res = {};
     res.status = jest.fn().mockReturnValue(res);
     res.send = jest.fn().mockReturnValue(res);
+    res.set = jest.fn().mockReturnValue(res);
     return res;
 };
 
@@ -250,6 +251,7 @@ describe('getProductController', () => {
     });
 });
 
+// Danielle Loh, A0257220N
 let getSingleProductController;
 
 beforeAll(async () => {
@@ -311,6 +313,72 @@ describe('getSingleProductController', () => {
             success: false,
             message: "Error while getting single product",
             error: mockError,
+        });
+    });
+});
+
+// Danielle Loh, A0257220N
+let productPhotoController;
+
+beforeAll(async () => {
+    const mod = await import ("./productController.js");
+    productPhotoController = mod.productPhotoController;
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
+afterEach(() => {
+    jest.restoreAllMocks();
+});
+
+describe('productPhotoController', () => {
+    test('returns product photo', async () => {
+        const fakeProduct = {
+            photo: {
+                data: Buffer.from("img"),
+                contentType: "image/png",
+            },
+        };
+
+        const mockSelect = jest.fn().mockResolvedValue(fakeProduct);
+        productModel.findById.mockReturnValue({ select: mockSelect });
+
+        const req = { params: { pid: '123' } };
+        const res = makeRes();
+
+        await productPhotoController(req, res);
+
+        expect(productModel.findById).toHaveBeenCalledWith('123');
+        expect(mockSelect).toHaveBeenCalledWith("photo");
+        expect(res.set).toHaveBeenCalledWith("Content-type", "image/png");
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith(fakeProduct.photo.data);
+    });
+
+    test('handles errors', async () => {
+        const fakeError = new Error("[productPhotoController] DB Error");
+
+        const consoleSpy = jest
+            .spyOn(console, "log")
+            .mockImplementation(() => {});
+
+        productModel.findById.mockImplementation(() => {
+            throw fakeError
+        });
+
+        const req = { params: { pid: '123' } };
+        const res = makeRes();
+
+        await productPhotoController(req, res);
+
+        expect(consoleSpy).toHaveBeenCalledWith(fakeError);
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error while getting photo",
+            error: fakeError,
         });
     });
 });
