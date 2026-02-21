@@ -6,7 +6,7 @@ import {
 
 import categoryModel from "../models/categoryModel.js";
 import slugify from "slugify";
-import { error } from "console";
+import { afterEach } from "node:test";
 
 jest.mock("../models/categoryModel.js");
 jest.mock("slugify");
@@ -21,10 +21,14 @@ const mockResponse = () => {
   res.status = jest.fn().mockReturnValue(res);
   res.send = jest.fn().mockReturnValue(res);
   return res;
-}
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 // Danielle Loh, A0257220N
@@ -55,7 +59,7 @@ describe("createCategoryController", () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.send).toHaveBeenCalledWith({
       success: true,
-      message: "Category Already Exisits",
+      message: "Category Already Exists",
     });
   });
 
@@ -103,10 +107,8 @@ describe("createCategoryController", () => {
     expect(res.send).toHaveBeenCalledWith({
       success: false,
       error: mockError,
-      message: "Errro in Category",
+      message: "Error in Category",
     });
-
-    consoleSpy.mockRestore();
   });
 });
 
@@ -164,7 +166,55 @@ describe("updateCategoryController", () => {
       error: mockError,
       message: "Error while updating category",
     });
-
-    consoleSpy.mockRestore();
   });
-})
+});
+
+// Danielle Loh, A0257220N
+describe("deleteCategoryCOntroller", () => {
+  test('deletes category successfully', async () => {
+    const req = mockRequest(
+      {},
+      { id: '123' }
+    );
+    const res = mockResponse();
+
+    categoryModel.findByIdAndDelete.mockResolvedValue({
+      name: 'Electronics',
+      slug: 'electronics'
+    });
+
+    await deleteCategoryCOntroller(req, res);
+
+    expect(categoryModel.findByIdAndDelete).toHaveBeenCalledWith('123');
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith({
+      success: true,
+      message: "Category Deleted Successfully",
+    });
+  });
+
+  test('handles errors', async () => {
+    const req = mockRequest(
+      {},
+      { id: '123' }
+    );
+    const res = mockResponse();
+
+    const consoleSpy = jest
+      .spyOn(console, "log")
+      .mockImplementation(() => {});
+    
+    const mockError = new Error("DB error");
+    categoryModel.findByIdAndDelete.mockRejectedValue(mockError);
+
+    await deleteCategoryCOntroller(req, res);
+
+    expect(consoleSpy).toHaveBeenCalledWith(mockError);
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send).toHaveBeenCalledWith({
+      success: false,
+      message: "error while deleting category",
+      error: mockError,
+    });
+  });
+});

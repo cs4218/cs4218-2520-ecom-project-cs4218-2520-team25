@@ -12,7 +12,7 @@ export const createCategoryController = async (req, res) => {
     if (existingCategory) {
       return res.status(200).send({
         success: true,
-        message: "Category Already Exisits",
+        message: "Category Already Exists",
       });
     }
     const category = await new categoryModel({
@@ -29,12 +29,13 @@ export const createCategoryController = async (req, res) => {
     res.status(500).send({
       success: false,
       error,
-      message: "Errro in Category",
+      message: "Error in Category",
     });
   }
 };
 
-//update category
+// update category
+// Danielle Loh, A0257220N
 export const updateCategoryController = async (req, res) => {
   try {
     const { name } = req.body;
@@ -97,14 +98,15 @@ export const singleCategoryController = async (req, res) => {
   }
 };
 
-//delete category
+// delete category
+// Danielle Loh, A0257220N
 export const deleteCategoryCOntroller = async (req, res) => {
   try {
     const { id } = req.params;
     await categoryModel.findByIdAndDelete(id);
     res.status(200).send({
       success: true,
-      message: "Categry Deleted Successfully",
+      message: "Category Deleted Successfully",
     });
   } catch (error) {
     console.log(error);
