@@ -416,7 +416,7 @@ describe("Auth Controllers", () => {
   });
 
   describe("registerController", () => {
-    // Equivalence Partitioning: Validation Failures
+    // Validation Failures
     test("should return error if name is missing", async () => {
       // Arrange
       req.body = {};
@@ -488,7 +488,7 @@ describe("Auth Controllers", () => {
     });
       
 
-    // Boundary Value Analysis: Existing User
+    // Existing User
     test("should return 200 if user already exists", async () => {
       // Arrange
       req.body = { name: "Kailash", email: "existing@test.com", password: "123", phone: "123", address: "SG", answer: "blue" };
@@ -520,7 +520,7 @@ describe("Auth Controllers", () => {
       expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
     });
 
-    // Boundary Value Analysis/Equivalence Partitioning: Registration failed
+    // Registration failed
     test("should return error if registration fails", async () => {
       // Arrange
       const userData = { name: "Kailash", email: "new@test.com", password: "123", phone: "123", address: "SG", answer: "blue" };
