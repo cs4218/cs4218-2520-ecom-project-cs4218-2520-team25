@@ -44,5 +44,4 @@ describe("useCategory hook", () => {
   });
 });
 
-
-
+// Unit test code was written with AI assistance by providing the type of unit test we want to test
