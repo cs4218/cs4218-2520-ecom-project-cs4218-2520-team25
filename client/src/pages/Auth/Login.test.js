@@ -10,37 +10,20 @@ import Login from './Login';
 jest.mock('axios');
 jest.mock('react-hot-toast');
 
+// Override global mock
 jest.mock('../../context/auth', () => ({
-    useAuth: jest.fn(() => [null, jest.fn()]) // Mock useAuth hook to return null state and a mock function for setAuth
-  }));
-
-  jest.mock('../../context/cart', () => ({
-    useCart: jest.fn(() => [null, jest.fn()]) // Mock useCart hook to return null state and a mock function
-  }));
-    
-jest.mock('../../context/search', () => ({
-    useSearch: jest.fn(() => [{ keyword: '' }, jest.fn()]) // Mock useSearch hook to return null state and a mock function
-  }));  
+    useAuth: jest.fn(() => [{ user: null, token: "" }, jest.fn()]) 
+}));
 
 jest.mock('../../hooks/useCategory', () => jest.fn(() => []));
 
+const mockedUsedNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockedUsedNavigate,
+  useLocation: () => ({ state: null }) // Default location state
+}));
 
-  Object.defineProperty(window, 'localStorage', {
-    value: {
-      setItem: jest.fn(),
-      getItem: jest.fn(),
-      removeItem: jest.fn(),
-    },
-    writable: true,
-  });
-
-window.matchMedia = window.matchMedia || function() {
-    return {
-      matches: false,
-      addListener: function() {},
-      removeListener: function() {}
-    };
-  };  
 
 describe('Login Component', () => {
     beforeEach(() => {
@@ -118,6 +101,25 @@ describe('Login Component', () => {
                 color: 'white'
             }
         });
+    });
+
+    it('handle unsuccessful login', async () => {
+        axios.post.mockResolvedValueOnce({ data: { success: false, message: 'Invalid credentials' } });
+
+        const { getByPlaceholderText, getByText } = render(
+            <MemoryRouter initialEntries={['/login']}>
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        fireEvent.change(getByPlaceholderText('Enter Your Email'), { target: { value: 'test@example.com' } });
+        fireEvent.change(getByPlaceholderText('Enter Your Password'), { target: { value: 'password123' } });
+        fireEvent.click(getByText('LOGIN'));
+
+        await waitFor(() => expect(axios.post).toHaveBeenCalled());
+        expect(toast.error).toHaveBeenCalledWith('Invalid credentials');
     });
 
     it('should display error message on failed login', async () => {
