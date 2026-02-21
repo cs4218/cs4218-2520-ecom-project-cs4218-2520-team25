@@ -44,6 +44,7 @@ const makeRes = () => {
     res.status = jest.fn().mockReturnValue(res);
     res.send = jest.fn().mockReturnValue(res);
     res.json = jest.fn().mockReturnValue(res);
+    res.set = jest.fn().mockReturnValue(res);
     return res;
 };
 
@@ -174,6 +175,212 @@ describe("createProductController", () => {
               message: "Error in crearing product",
           })
       );
+    });
+});
+
+// Danielle Loh, A0257220N
+let getProductController;
+
+beforeAll(async () => {
+    const mod = await import ("./productController.js");
+    getProductController = mod.getProductController;
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
+afterEach(() => {
+    jest.restoreAllMocks();
+});
+
+describe('getProductController', () => {
+    test('returns list of products', async () => {
+        const fakeProducts = [
+            { name: 'Test Product' }
+        ];
+
+        const sortMock = jest.fn().mockResolvedValue(fakeProducts);
+        const limitMock = jest.fn().mockReturnValue({ sort: sortMock });
+        const selectMock = jest.fn().mockReturnValue({ limit: limitMock });
+        const populateMock = jest.fn().mockReturnValue({ select: selectMock});
+
+        productModel.find.mockReturnValue({ populate: populateMock });
+
+        const req = {}
+        const res = makeRes();
+
+        await getProductController(req, res);
+
+        expect(productModel.find).toHaveBeenCalledWith({});
+        expect(populateMock).toHaveBeenCalledWith("category");
+        expect(selectMock).toHaveBeenCalledWith("-photo");
+        expect(limitMock).toHaveBeenCalledWith(12)
+        expect(sortMock).toHaveBeenCalledWith({ createdAt: -1 });
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith({
+            success: true,
+            counTotal: 1,
+            message: "All Products ",
+            products: fakeProducts,
+        });
+    });
+
+    test('handles errors', async () => {
+        const mockError = new Error("[createProductController] DB error");
+
+        const consoleSpy = jest
+            .spyOn(console, "log")
+            .mockImplementation(() => {});
+
+        productModel.find.mockImplementation(() => {
+            throw mockError
+        });
+
+        const req = {};
+        const res = makeRes();
+
+        await getProductController(req, res);
+
+        expect(consoleSpy).toHaveBeenCalledWith(mockError);
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error in getting products",
+            error: mockError,
+        });
+    });
+});
+
+// Danielle Loh, A0257220N
+let getSingleProductController;
+
+beforeAll(async () => {
+    const mod = await import ("./productController.js");
+    getSingleProductController = mod.getSingleProductController;
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
+afterEach(() => {
+    jest.restoreAllMocks();
+});
+
+describe('getSingleProductController', () => {
+    test('returns a single product', async () => {
+        const fakeProduct = { name: 'Test Product' };
+
+        const mockPopulate = jest.fn().mockResolvedValue(fakeProduct);
+        const mockSelect = jest.fn().mockReturnValue({ populate: mockPopulate });
+        productModel.findOne.mockReturnValue({ select: mockSelect });
+
+        const req = { params: { slug: "test product" } };
+        const res = makeRes();
+
+        await getSingleProductController(req, res);
+
+        expect(productModel.findOne).toHaveBeenCalledWith({ slug: "test product" });
+        expect(mockSelect).toHaveBeenCalledWith("-photo");
+        expect(mockPopulate).toHaveBeenCalledWith("category");
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith({
+            success: true,
+            message: "Single Product Fetched",
+            product: fakeProduct,
+        });
+    });
+
+    test('handles errors', async () => {
+        const mockError = new Error("[getSingleProductController] DB Error");
+
+        const consoleSpy = jest
+            .spyOn(console, "log")
+            .mockImplementation(() => {});
+
+        productModel.findOne.mockImplementation(() => {
+            throw mockError
+        });
+
+        const req = { params: { slug: "test product" } }
+        const res = makeRes();
+
+        await getSingleProductController(req, res);
+
+        expect(consoleSpy).toHaveBeenCalledWith(mockError);
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error while getting single product",
+            error: mockError,
+        });
+    });
+});
+
+// Danielle Loh, A0257220N
+let productPhotoController;
+
+beforeAll(async () => {
+    const mod = await import ("./productController.js");
+    productPhotoController = mod.productPhotoController;
+});
+
+beforeEach(() => {
+    jest.clearAllMocks();
+});
+
+afterEach(() => {
+    jest.restoreAllMocks();
+});
+
+describe('productPhotoController', () => {
+    test('returns product photo', async () => {
+        const fakeProduct = {
+            photo: {
+                data: Buffer.from("img"),
+                contentType: "image/png",
+            },
+        };
+
+        const mockSelect = jest.fn().mockResolvedValue(fakeProduct);
+        productModel.findById.mockReturnValue({ select: mockSelect });
+
+        const req = { params: { pid: '123' } };
+        const res = makeRes();
+
+        await productPhotoController(req, res);
+
+        expect(productModel.findById).toHaveBeenCalledWith('123');
+        expect(mockSelect).toHaveBeenCalledWith("photo");
+        expect(res.set).toHaveBeenCalledWith("Content-type", "image/png");
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith(fakeProduct.photo.data);
+    });
+
+    test('handles errors', async () => {
+        const fakeError = new Error("[productPhotoController] DB Error");
+
+        const consoleSpy = jest
+            .spyOn(console, "log")
+            .mockImplementation(() => {});
+
+        productModel.findById.mockImplementation(() => {
+            throw fakeError
+        });
+
+        const req = { params: { pid: '123' } };
+        const res = makeRes();
+
+        await productPhotoController(req, res);
+
+        expect(consoleSpy).toHaveBeenCalledWith(fakeError);
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.send).toHaveBeenCalledWith({
+            success: false,
+            message: "Error while getting photo",
+            error: fakeError,
+        });
     });
 });
 
