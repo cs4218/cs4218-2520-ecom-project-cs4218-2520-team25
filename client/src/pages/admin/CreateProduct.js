@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { Select } from "antd";
 import { useNavigate } from "react-router-dom";
+
 const { Option } = Select;
 
 const CreateProduct = () => {
@@ -27,7 +28,7 @@ const CreateProduct = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error("Something wwent wrong in getting catgeory");
+      toast.error("Something went wrong in getting catgeory");
     }
   };
 
@@ -46,15 +47,15 @@ const CreateProduct = () => {
       productData.append("quantity", quantity);
       productData.append("photo", photo);
       productData.append("category", category);
-      const { data } = axios.post(
+      const { data } = await axios.post(
         "/api/v1/product/create-product",
         productData
       );
       if (data?.success) {
-        toast.error(data?.message);
-      } else {
         toast.success("Product Created Successfully");
         navigate("/dashboard/admin/products");
+      } else {
+        toast.error(data?.message);
       }
     } catch (error) {
       console.log(error);
@@ -66,14 +67,17 @@ const CreateProduct = () => {
     <Layout title={"Dashboard - Create Product"}>
       <div className="container-fluid m-3 p-3">
         <div className="row">
+
           <div className="col-md-3">
             <AdminMenu />
           </div>
+
           <div className="col-md-9">
             <h1>Create Product</h1>
+
             <div className="m-1 w-75">
               <Select
-                bordered={false}
+                variant={false}
                 placeholder="Select a category"
                 size="large"
                 showSearch
@@ -88,6 +92,7 @@ const CreateProduct = () => {
                   </Option>
                 ))}
               </Select>
+
               <div className="mb-3">
                 <label className="btn btn-outline-secondary col-md-12">
                   {photo ? photo.name : "Upload Photo"}
@@ -100,6 +105,7 @@ const CreateProduct = () => {
                   />
                 </label>
               </div>
+
               <div className="mb-3">
                 {photo && (
                   <div className="text-center">
@@ -112,6 +118,7 @@ const CreateProduct = () => {
                   </div>
                 )}
               </div>
+
               <div className="mb-3">
                 <input
                   type="text"
@@ -121,6 +128,7 @@ const CreateProduct = () => {
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
+
               <div className="mb-3">
                 <textarea
                   type="text"
@@ -135,11 +143,12 @@ const CreateProduct = () => {
                 <input
                   type="number"
                   value={price}
-                  placeholder="write a Price"
+                  placeholder="write a price"
                   className="form-control"
                   onChange={(e) => setPrice(e.target.value)}
                 />
               </div>
+
               <div className="mb-3">
                 <input
                   type="number"
@@ -149,10 +158,11 @@ const CreateProduct = () => {
                   onChange={(e) => setQuantity(e.target.value)}
                 />
               </div>
+
               <div className="mb-3">
                 <Select
-                  bordered={false}
-                  placeholder="Select Shipping "
+                  variant={false}
+                  placeholder="Select Shipping"
                   size="large"
                   showSearch
                   className="form-select mb-3"
@@ -164,11 +174,13 @@ const CreateProduct = () => {
                   <Option value="1">Yes</Option>
                 </Select>
               </div>
+
               <div className="mb-3">
                 <button className="btn btn-primary" onClick={handleCreate}>
                   CREATE PRODUCT
                 </button>
               </div>
+
             </div>
           </div>
         </div>
