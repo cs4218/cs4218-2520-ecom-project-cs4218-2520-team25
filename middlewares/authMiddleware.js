@@ -2,6 +2,7 @@ import JWT from "jsonwebtoken";
 import userModel from "../models/userModel.js";
 
 // Protected routes token base
+// Kailashwaran, A0253385Y
 export const requireSignIn = async (req, res, next) => {
     try {
         const decode = JWT.verify(

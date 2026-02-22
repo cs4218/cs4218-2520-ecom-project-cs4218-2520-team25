@@ -1,3 +1,25 @@
+## Workload distribution
+
+### Kailash
+- context/auth.js
+- pages/Auth/Register.js 
+- pages/Auth/Login.js
+- components/Routes/Private.js
+- components/UserMenu.js
+- pages/user/Dashboard.js
+- pages/user/Profile.js
+- pages/admin/Users.js
+- helpers/authHelper.js
+- middlewares/authMiddleware.js
+- controllers/authController.js
+    1. registerController
+    2. loginController
+    3. forgotPasswordController
+    4. testController
+- models/userModel.js
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

@@ -1,3 +1,5 @@
+// Kailashwaran, A0253385Y; Entire file
+
 import JWT from "jsonwebtoken";
 import userModel from "../models/userModel.js";
 import { requireSignIn, isAdmin } from "./authMiddleware.js";
