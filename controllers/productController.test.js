@@ -2,7 +2,6 @@ import fs from "fs";
 import slugify from "slugify";
 import productModel from "../models/productModel.js";
 import categoryModel from "../models/categoryModel.js";
-import { gateway } from "./braintreeGateway.js";;
 import e from "cors";
 
 // --- mocks (must be declared before importing productController.js) ---
@@ -30,13 +29,23 @@ jest.mock("dotenv", () => ({
     default: { config: jest.fn() },
 }));
 
-jest.mock("./braintreeGateway.js", () => ({
-  gateway: {
-    clientToken: {
-      generate: jest.fn(),
-    },
+const mockedGateway = {
+  clientToken: {
+    generate: jest.fn(),
   },
+};
+
+jest.mock("./braintreeGateway.js", () => ({
+  gateway: mockedGateway,
 }));
+
+// jest.mock("./braintreeGateway.js", () => ({
+//   gateway: {
+//     clientToken: {
+//       generate: jest.fn(),
+//     },
+//   },
+// }));
 
 // we will import controller AFTER mocks are set
 let createProductController;
@@ -1070,7 +1079,7 @@ describe("productCategoryController", () => {
   let req, res;
 
   beforeEach(() => {
-    req = { params: { slug: "electronics" } };
+    req = { params: { slug: "test" } };
     res = {
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
@@ -1089,6 +1098,8 @@ describe("productCategoryController", () => {
     productModel.find.mockReturnValue({
       populate: jest.fn().mockResolvedValue(mockProducts),
     });
+
+    req = { params: { slug: mockCategory.slug } };
 
     await productCategoryController(req, res);
 
@@ -1171,6 +1182,7 @@ describe("productCategoryController", () => {
   });
 });
 
+let braintreeTokenController;
 
 beforeAll(async () => {
     const mod = await import("./productController.js");
@@ -1183,40 +1195,32 @@ describe("braintreeTokenController", () => {
 
   beforeEach(() => {
     req = {};
-
     res = {
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
     };
     jest.clearAllMocks();
   });
-it("calls gateway.clientToken.generate and sends response on success", async () => {
-    // --- Arrange ---
-    const mockResponse = { clientToken: "mock-token-123" };
 
-    console.log(gateway);
-    
-    // 3. Stub: Mocking a callback-based function
-    gateway.clientToken.generate.mockImplementation((_options, callback) => {
-      callback(null, mockResponse); // No error, return response
+it("calls gateway.clientToken.generate and sends response on success", () => {
+    const mockResponse = { clientToken: "mock-token-123" };
+    mockedGateway.clientToken.generate.mockImplementation((_options, callback) => {
+        callback(null, mockResponse);
     });
 
-    // --- Act ---
-    await braintreeTokenController(req, res);
+    braintreeTokenController(req, res);
 
-    // --- Assert ---
-    // 1. AAA Pattern: Verify the interaction and result
-    expect(gateway.clientToken.generate).toHaveBeenCalled();
+    expect(mockedGateway.clientToken.generate).toHaveBeenCalledWith({}, expect.any(Function));
     expect(res.send).toHaveBeenCalledWith(mockResponse);
 });
 
 it("sends 500 when gateway.clientToken.generate calls back with error", async () => {
     const err = new Error("gateway error");
-    gateway.clientToken.generate.mockImplementation((opts, cb) => cb(err, null));
+    mockedGateway.clientToken.generate.mockImplementation((opts, cb) => cb(err, null));
 
     await braintreeTokenController(req, res);
 
-    expect(gateway.clientToken.generate).toHaveBeenCalledWith(
+    expect(mockedGateway.clientToken.generate).toHaveBeenCalledWith(
         {},
         expect.any(Function)
     );
@@ -1226,7 +1230,7 @@ it("sends 500 when gateway.clientToken.generate calls back with error", async ()
 
 it("logs error if gateway.clientToken.generate throws synchronously and does not send a response", async () => {
     const thrown = new Error("boom");
-    gateway.clientToken.generate.mockImplementation(() => {
+    mockedGateway.clientToken.generate.mockImplementation(() => {
         throw thrown;
     });
 
