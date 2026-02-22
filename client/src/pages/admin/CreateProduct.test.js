@@ -4,6 +4,8 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import CreateProduct from "./CreateProduct";
 
+// Danielle Loh, A0257220N
+
 // ---
 // MOCK DEPENDENCIES
 // ---

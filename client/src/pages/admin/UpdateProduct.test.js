@@ -4,6 +4,8 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import UpdateProduct from "./UpdateProduct";
 
+// Danielle Loh, A0257220N
+
 // --- MOCK DEPENDENCIES ---
 jest.mock("axios");
 
