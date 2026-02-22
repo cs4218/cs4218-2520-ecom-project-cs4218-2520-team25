@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { Select } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
+
 const { Option } = Select;
 
 const UpdateProduct = () => {
@@ -26,10 +27,10 @@ const UpdateProduct = () => {
       const { data } = await axios.get(
         `/api/v1/product/get-product/${params.slug}`
       );
+
       setName(data.product.name);
       setId(data.product._id);
       setDescription(data.product.description);
-      setPrice(data.product.price);
       setPrice(data.product.price);
       setQuantity(data.product.quantity);
       setShipping(data.product.shipping);
@@ -38,10 +39,12 @@ const UpdateProduct = () => {
       console.log(error);
     }
   };
+
   useEffect(() => {
     getSingleProduct();
     //eslint-disable-next-line
   }, []);
+
   //get all category
   const getAllCategory = async () => {
     try {
@@ -62,6 +65,7 @@ const UpdateProduct = () => {
   //create product function
   const handleUpdate = async (e) => {
     e.preventDefault();
+
     try {
       const productData = new FormData();
       productData.append("name", name);
@@ -70,15 +74,18 @@ const UpdateProduct = () => {
       productData.append("quantity", quantity);
       photo && productData.append("photo", photo);
       productData.append("category", category);
-      const { data } = axios.put(
+
+      const { data } = await axios.put(
         `/api/v1/product/update-product/${id}`,
         productData
       );
+
       if (data?.success) {
-        toast.error(data?.message);
-      } else {
         toast.success("Product Updated Successfully");
         navigate("/dashboard/admin/products");
+        toast.error(data?.message);
+      } else {
+        toast.error(data?.message);
       }
     } catch (error) {
       console.log(error);
@@ -89,18 +96,27 @@ const UpdateProduct = () => {
   //delete a product
   const handleDelete = async () => {
     try {
-      let answer = window.prompt("Are You Sure want to delete this product ? ");
-      if (!answer) return;
+      let confirmed = window.confirm("Are you sure want to delete this product?");
+      
+      if (!confirmed) return;
+
       const { data } = await axios.delete(
         `/api/v1/product/delete-product/${id}`
       );
-      toast.success("Product DEleted Succfully");
-      navigate("/dashboard/admin/products");
+
+      if (data?.success) {
+        toast.success("Product Deleted Successfully");
+        navigate("/dashboard/admin/products");
+      } else {
+        toast.error(data?.message);
+        return;
+      }
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong");
     }
   };
+
   return (
     <Layout title={"Dashboard - Create Product"}>
       <div className="container-fluid m-3 p-3">
@@ -108,11 +124,13 @@ const UpdateProduct = () => {
           <div className="col-md-3">
             <AdminMenu />
           </div>
+
           <div className="col-md-9">
             <h1>Update Product</h1>
+
             <div className="m-1 w-75">
               <Select
-                bordered={false}
+                variant={false}
                 placeholder="Select a category"
                 size="large"
                 showSearch
@@ -128,6 +146,7 @@ const UpdateProduct = () => {
                   </Option>
                 ))}
               </Select>
+
               <div className="mb-3">
                 <label className="btn btn-outline-secondary col-md-12">
                   {photo ? photo.name : "Upload Photo"}
@@ -140,6 +159,7 @@ const UpdateProduct = () => {
                   />
                 </label>
               </div>
+
               <div className="mb-3">
                 {photo ? (
                   <div className="text-center">
@@ -161,6 +181,7 @@ const UpdateProduct = () => {
                   </div>
                 )}
               </div>
+
               <div className="mb-3">
                 <input
                   type="text"
@@ -170,6 +191,7 @@ const UpdateProduct = () => {
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
+
               <div className="mb-3">
                 <textarea
                   type="text"
@@ -189,6 +211,7 @@ const UpdateProduct = () => {
                   onChange={(e) => setPrice(e.target.value)}
                 />
               </div>
+
               <div className="mb-3">
                 <input
                   type="number"
@@ -198,9 +221,10 @@ const UpdateProduct = () => {
                   onChange={(e) => setQuantity(e.target.value)}
                 />
               </div>
+
               <div className="mb-3">
                 <Select
-                  bordered={false}
+                  variant={false}
                   placeholder="Select Shipping "
                   size="large"
                   showSearch
@@ -214,16 +238,19 @@ const UpdateProduct = () => {
                   <Option value="1">Yes</Option>
                 </Select>
               </div>
+
               <div className="mb-3">
                 <button className="btn btn-primary" onClick={handleUpdate}>
                   UPDATE PRODUCT
                 </button>
               </div>
+
               <div className="mb-3">
                 <button className="btn btn-danger" onClick={handleDelete}>
                   DELETE PRODUCT
                 </button>
               </div>
+
             </div>
           </div>
         </div>
