@@ -5,6 +5,8 @@ const productSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      trim: true,
+      minlength: 1,
     },
     slug: {
       type: String,
@@ -17,6 +19,7 @@ const productSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: true,
+      min: 0,
     },
     category: {
       type: mongoose.ObjectId,
@@ -26,6 +29,7 @@ const productSchema = new mongoose.Schema(
     quantity: {
       type: Number,
       required: true,
+      min: 0,
     },
     photo: {
       data: Buffer,
