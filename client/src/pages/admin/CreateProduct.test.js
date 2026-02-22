@@ -2,9 +2,7 @@ import React from "react";
 import { render, screen, waitFor, within, fireEvent } from "@testing-library/react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
 import CreateProduct from "./CreateProduct";
-import { message } from "antd";
 
 // ---
 // MOCK DEPENDENCIES
@@ -167,7 +165,7 @@ describe('CreateProduct', () => {
     const consoleSpy = jest.spyOn(console, 'log'). mockImplementation(() => {});
     axios.get.mockRejectedValue(mockError);
 
-     render(<CreateProduct />);
+    render(<CreateProduct />);
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith("Something went wrong in getting catgeory");

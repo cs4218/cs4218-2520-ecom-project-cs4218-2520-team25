@@ -37,6 +37,7 @@ const UpdateProduct = () => {
       setCategory(data.product.category._id);
     } catch (error) {
       console.log(error);
+      toast.error("Something went wrong in getting product details");
     }
   };
 
@@ -49,12 +50,13 @@ const UpdateProduct = () => {
   const getAllCategory = async () => {
     try {
       const { data } = await axios.get("/api/v1/category/get-category");
+
       if (data?.success) {
         setCategories(data?.category);
       }
     } catch (error) {
       console.log(error);
-      toast.error("Something wwent wrong in getting catgeory");
+      toast.error("Something went wrong in getting category");
     }
   };
 
@@ -83,7 +85,6 @@ const UpdateProduct = () => {
       if (data?.success) {
         toast.success("Product Updated Successfully");
         navigate("/dashboard/admin/products");
-        toast.error(data?.message);
       } else {
         toast.error(data?.message);
       }
@@ -206,7 +207,7 @@ const UpdateProduct = () => {
                 <input
                   type="number"
                   value={price}
-                  placeholder="write a Price"
+                  placeholder="write a price"
                   className="form-control"
                   onChange={(e) => setPrice(e.target.value)}
                 />
