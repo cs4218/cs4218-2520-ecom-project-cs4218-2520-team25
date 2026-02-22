@@ -1,5 +1,27 @@
 # CS4218 Project - Virtual Vault
 
+## Workload distribution
+
+### Kailash
+- context/auth.js
+- pages/Auth/Register.js 
+- pages/Auth/Login.js
+- components/Routes/Private.js
+- components/UserMenu.js
+- pages/user/Dashboard.js
+- pages/user/Profile.js
+- pages/admin/Users.js
+- helpers/authHelper.js
+- middlewares/authMiddleware.js
+- controllers/authController.js
+    1. registerController
+    2. loginController
+    3. forgotPasswordController
+    4. testController
+- models/userModel.js
+
+
+
 ## 1. Project Introduction
 
 Virtual Vault is a full-stack MERN (MongoDB, Express.js, React.js, Node.js) e-commerce website, offering seamless connectivity and user-friendly features. The platform provides a robust framework for online shopping. The website is designed to adapt to evolving business needs and can be efficiently extended.
