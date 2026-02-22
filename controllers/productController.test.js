@@ -933,18 +933,18 @@ describe("searchProductController", () => {
     });
 });
 
-let realtedProductController;
+let relatedProductController;
 
 beforeAll(async () => {
     const mod = await import("../controllers/productController.js");
-    realtedProductController = mod.realtedProductController;
+    relatedProductController = mod.relatedProductController;
 });
 
 beforeEach(() => {
     jest.clearAllMocks(); 
 });
 
-describe("realtedProductController", () => {
+describe("relatedProductController", () => {
     it("should find related products by category, exclude pid, exclude photo, limit 3, populate category, and return 200", async () => {
         const req = { params: { pid: "p1", cid: "c1" } };
         const res = makeRes();
@@ -961,7 +961,7 @@ describe("realtedProductController", () => {
 
         productModel.find.mockReturnValue({ select: selectMock });
 
-        await realtedProductController(req, res);
+        await relatedProductController(req, res);
 
         expect(productModel.find).toHaveBeenCalledTimes(1);
         expect(productModel.find).toHaveBeenCalledWith({
@@ -990,7 +990,7 @@ describe("realtedProductController", () => {
 
         productModel.find.mockReturnValue({ select: selectMock });
 
-        await realtedProductController(req, res);
+        await relatedProductController(req, res);
 
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.send).toHaveBeenCalledWith({ success: true, products: [] });
@@ -1006,7 +1006,7 @@ describe("realtedProductController", () => {
 
         productModel.find.mockReturnValue({ select: selectMock });
 
-        await realtedProductController(req, res);
+        await relatedProductController(req, res);
 
         expect(productModel.find).toHaveBeenCalledWith({
             category: undefined,
@@ -1024,7 +1024,7 @@ describe("realtedProductController", () => {
         throw new Error("DB find error");
         });
 
-        await realtedProductController(req, res);
+        await relatedProductController(req, res);
 
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.send).toHaveBeenCalledWith(
@@ -1046,7 +1046,7 @@ describe("realtedProductController", () => {
 
         productModel.find.mockReturnValue({ select: selectMock });
 
-        await realtedProductController(req, res);
+        await relatedProductController(req, res);
 
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.send).toHaveBeenCalledWith(
