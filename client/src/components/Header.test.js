@@ -239,7 +239,7 @@ describe("Header Component", () => {
     useCart.mockReturnValue([[]]);
     useCategory.mockReturnValue([]);
 
-    const removeSpy = jest.spyOn(Storage.prototype, "removeItem");
+    const removeSpy = jest.spyOn(window.localStorage, "removeItem");
 
     renderComponent();
 
