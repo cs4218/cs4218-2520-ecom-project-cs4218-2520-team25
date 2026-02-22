@@ -47,10 +47,12 @@ const CreateProduct = () => {
       productData.append("quantity", quantity);
       productData.append("photo", photo);
       productData.append("category", category);
+
       const { data } = await axios.post(
         "/api/v1/product/create-product",
         productData
       );
+      
       if (data?.success) {
         toast.success("Product Created Successfully");
         navigate("/dashboard/admin/products");
