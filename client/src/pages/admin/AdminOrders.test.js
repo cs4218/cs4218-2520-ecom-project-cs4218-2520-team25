@@ -69,31 +69,27 @@ const ordersMock = [
   },
 ];
 
-describe("AdminOrders Component", () => {
+describe("AdminOrders", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     useAuth.mockReturnValue([{ token: "fake-token" }, jest.fn()]);
     axios.get.mockResolvedValue({ data: ordersMock });
   });
 
-  test('renders layout, admin menu, and heading', async () => {
-    render(<AdminOrders />);
-
-    expect(screen.getByTestId('layout')).toBeInTheDocument();
-    expect(screen.getByTestId('admin-menu')).toBeInTheDocument();
-    expect(screen.getByRole('heading', {
-          level: 1,
-          name: /all orders/i,
-        })).toBeInTheDocument();
-  });
-
-  test('fetches and renders orders', async () => {
+  test('renders components, fetches and enders orders', async () => {
     render(<AdminOrders />);
 
     await waitFor(() => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
       expect(screen.getByText("Jane Smith")).toBeInTheDocument();
     });
+
+    expect(screen.getByTestId('layout')).toBeInTheDocument();
+    expect(screen.getByTestId('admin-menu')).toBeInTheDocument();
+    expect(screen.getByRole('heading', {
+      level: 1,
+      name: /all orders/i,
+    })).toBeInTheDocument();
   });
 
   test("renders product info for each order", async () => {
@@ -152,6 +148,10 @@ describe("AdminOrders Component", () => {
         "/api/v1/auth/order-status/1",
         { status: "Processing" }
       );
+    });
+
+    await waitFor(() => {
+      expect(select.value).toBe("Processing");
     });
   });
 
