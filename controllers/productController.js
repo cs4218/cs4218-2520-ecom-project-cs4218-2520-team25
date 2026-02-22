@@ -61,7 +61,8 @@ export const createProductController = async (req, res) => {
   }
 };
 
-//get all products
+// get all products
+// Danielle Loh, A0257220N
 export const getProductController = async (req, res) => {
   try {
     const products = await productModel
@@ -73,19 +74,21 @@ export const getProductController = async (req, res) => {
     res.status(200).send({
       success: true,
       counTotal: products.length,
-      message: "ALlProducts ",
+      message: "All Products ",
       products,
     });
   } catch (error) {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Erorr in getting products",
-      error: error.message,
+      message: "Error in getting products",
+      error,
     });
   }
 };
+
 // get single product
+// Danielle Loh, A0257220N
 export const getSingleProductController = async (req, res) => {
   try {
     const product = await productModel
@@ -101,13 +104,14 @@ export const getSingleProductController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Eror while getitng single product",
+      message: "Error while getting single product",
       error,
     });
   }
 };
 
 // get photo
+// Danielle Loh, A0257220N
 export const productPhotoController = async (req, res) => {
   try {
     const product = await productModel.findById(req.params.pid).select("photo");
@@ -119,7 +123,7 @@ export const productPhotoController = async (req, res) => {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Erorr while getting photo",
+      message: "Error while getting photo",
       error,
     });
   }
@@ -281,7 +285,7 @@ export const searchProductController = async (req, res) => {
 };
 
 // similar products
-export const realtedProductController = async (req, res) => {
+export const relatedProductController = async (req, res) => {
   try {
     const { pid, cid } = req.params;
     const products = await productModel
@@ -306,7 +310,7 @@ export const realtedProductController = async (req, res) => {
   }
 };
 
-// get prdocyst by catgory
+// get product by catgory
 export const productCategoryController = async (req, res) => {
   try {
     const category = await categoryModel.findOne({ slug: req.params.slug });
