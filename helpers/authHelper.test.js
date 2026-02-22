@@ -1,3 +1,5 @@
+// Kailashwaran, A0253385Y; Entire file
+
 import bcrypt from "bcrypt";
 import { hashPassword, comparePassword } from "./authHelper";
 
