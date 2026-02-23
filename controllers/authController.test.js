@@ -658,7 +658,7 @@ describe("Auth Controllers", () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Emai is required" }));
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Email is required" }));
     });
 
     // Missing answer
@@ -710,7 +710,7 @@ describe("Auth Controllers", () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Emai is required" }));
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Email is required" }));
     });
 
     // Error in password reset
