@@ -59,6 +59,7 @@ describe("CartPage", () => {
         window.localStorage.removeItem.mockClear();
     });
 
+    // Owen Yeo Le Yang A0252047L
     test("renders guest view with empty cart and fetches token", async () => {
         render(<CartPage />);
 
@@ -70,6 +71,7 @@ describe("CartPage", () => {
         });
     });
 
+    // Owen Yeo Le Yang A0252047L
     test("renders authenticated greeting and cart count", async () => {
         useAuth.mockReturnValue([
             { token: "token_abc", user: { name: "Bob", address: "123 Street" } },
@@ -85,6 +87,7 @@ describe("CartPage", () => {
         expect(screen.getByText(/total\s*:\s*\$30\.00/i)).toBeInTheDocument();
     });
 
+    // Owen Yeo Le Yang A0252047L
     test("renders cart items and removes an item", async () => {
         useAuth.mockReturnValue([
             { token: "token_abc", user: { name: "Bob", address: "123 Street" } },
@@ -108,6 +111,7 @@ describe("CartPage", () => {
         );
     });
 
+    // Owen Yeo Le Yang A0252047L
     test("shows current address and navigates to profile for update", async () => {
         useAuth.mockReturnValue([
             { token: "token_abc", user: { name: "Bob", address: "123 Street" } },
@@ -125,6 +129,7 @@ describe("CartPage", () => {
         expect(mockNavigate).toHaveBeenCalledWith("/dashboard/user/profile");
     });
 
+    // Owen Yeo Le Yang A0252047L
     test("shows update address button when logged in without address", async () => {
         useAuth.mockReturnValue([
             { token: "token_abc", user: { name: "Bob", address: "" } },
@@ -139,6 +144,7 @@ describe("CartPage", () => {
         expect(mockNavigate).toHaveBeenCalledWith("/dashboard/user/profile");
     });
 
+    // Owen Yeo Le Yang A0252047L
     test("shows login button and navigates to login with state for guest", async () => {
         useAuth.mockReturnValue([{ token: null, user: null }, mockSetAuth]);
         useCart.mockReturnValue([cartItems, mockSetCart]);
@@ -150,6 +156,7 @@ describe("CartPage", () => {
         expect(mockNavigate).toHaveBeenCalledWith("/login", { state: "/cart" });
     });
 
+    // Owen Yeo Le Yang A0252047L
     test("does not render drop-in when token, auth token, or cart is missing", async () => {
         render(<CartPage />);
         await waitFor(() => expect(axios.get).toHaveBeenCalled());
@@ -166,6 +173,7 @@ describe("CartPage", () => {
         expect(screen.queryByTestId("dropin")).not.toBeInTheDocument();
     });
 
+    // Owen Yeo Le Yang A0252047L
     test("renders drop-in and completes payment successfully", async () => {
         useAuth.mockReturnValue([
             { token: "token_abc", user: { name: "Bob", address: "123 Street" } },
@@ -199,6 +207,7 @@ describe("CartPage", () => {
         });
     });
 
+    // Owen Yeo Le Yang A0252047L
     test("disables payment button when address is missing", async () => {
         useAuth.mockReturnValue([
             { token: "token_abc", user: { name: "Bob", address: "" } },
@@ -213,6 +222,7 @@ describe("CartPage", () => {
         expect(paymentButton).toBeDisabled();
         });
 
+    // Owen Yeo Le Yang A0252047L
     test("handles payment failure and does not clear cart", async () => {
         const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
         useAuth.mockReturnValue([
@@ -253,6 +263,7 @@ describe("CartPage", () => {
         consoleSpy.mockRestore();
         });
 
+    // Owen Yeo Le Yang A0252047L
     test("handles token fetch error", async () => {
         const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
         axios.get.mockRejectedValue(new Error("Token error"));

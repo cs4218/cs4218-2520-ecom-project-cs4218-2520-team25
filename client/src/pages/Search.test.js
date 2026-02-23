@@ -10,6 +10,7 @@ describe("Search", () => {
     jest.clearAllMocks();
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("renders empty state when there are no search results", () => {
     useSearch.mockReturnValue([
       {
@@ -27,6 +28,7 @@ describe("Search", () => {
     expect(screen.queryByRole("button", { name: /add to cart/i })).not.toBeInTheDocument();
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("renders product cards when search results are available", () => {
     const products = [
       {

@@ -37,6 +37,22 @@
    2. getSingleProductController
    3. productPhotoController
 
+### Owen
+- components/From/searchInput.js
+- context/cart.js
+- context/search.js
+- pages/CartPage.js
+- pages/Search.js
+- controllers/authController.js
+   1. updateProfileController
+   2. getOrderController
+   3. getAllOrdersController
+   4. orderStatusController
+- controllers/productController.js
+   1. searchProductController
+   2. relatedProductController (formerly realtedProductController)
+
+
 ## 1. Project Introduction
 
 Virtual Vault is a full-stack MERN (MongoDB, Express.js, React.js, Node.js) e-commerce website, offering seamless connectivity and user-friendly features. The platform provides a robust framework for online shopping. The website is designed to adapt to evolving business needs and can be efficiently extended.

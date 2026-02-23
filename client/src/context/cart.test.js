@@ -32,6 +32,7 @@ describe("CartProvider & useCart Hook", () => {
     window.localStorage.getItem.mockReturnValue(null);
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("should initialize with empty cart when localStorage has no cart", () => {
     render(
       <CartProvider>
@@ -44,6 +45,7 @@ describe("CartProvider & useCart Hook", () => {
     expect(window.localStorage.getItem).toHaveBeenCalledWith("cart");
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("should hydrate cart from localStorage on mount", async () => {
     const mockCart = [
       { _id: "c1", name: "Hydrated Item", price: 10 },
@@ -63,6 +65,7 @@ describe("CartProvider & useCart Hook", () => {
     });
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("should update cart via setCart from useCart", async () => {
     render(
       <CartProvider>
