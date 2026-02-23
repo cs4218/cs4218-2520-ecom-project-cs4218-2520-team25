@@ -136,6 +136,31 @@
 ##### Database
 - db.test.js
 
+### Tae Won
+
+- **Pages / Admin**
+  - `pages/admin/Products.js`
+  - `controllers/productController.js`
+    1. `createProductController`
+    2. `deleteProductController`
+    3. `updateProductController`
+
+- **Product**
+  - `pages/ProductDetails.js`
+  - `pages/CategoryProduct.js`
+    4. `productFiltersController`
+    5. `productCountController`
+    6. `productListController`
+
+- **Contact**
+  - `pages/Contact.js`
+
+- **Policy**
+  - `pages/Policy.js`
+
+- **Home**
+  - `pages/Homepage.js`
+
 ## 1. Project Introduction
 
 Virtual Vault is a full-stack MERN (MongoDB, Express.js, React.js, Node.js) e-commerce website, offering seamless connectivity and user-friendly features. The platform provides a robust framework for online shopping. The website is designed to adapt to evolving business needs and can be efficiently extended.
