@@ -1,5 +1,7 @@
+// Daniel Loh, A0252099X
+
 import mongoose from "mongoose";
-import Product from "./productModel"; // adjust path
+import Product from "./productModel";
 
 describe("Product Model Validation", () => {
 

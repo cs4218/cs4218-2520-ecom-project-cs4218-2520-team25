@@ -1,5 +1,7 @@
+// Daniel Loh, A0252099X
+
 import mongoose from "mongoose";
-import connectDB from "../config/db.js"; // adjust path
+import connectDB from "../config/db.js";
 
 jest.mock("mongoose");
 

@@ -1,3 +1,5 @@
+// Daniel Loh, A0252099X
+
 import Category from "./categoryModel.js"; // adjust path if needed
 
 describe("Category Schema Validation (No DB Connection)", () => {

@@ -171,6 +171,8 @@ describe("updateCategoryController", () => {
   });
 });
 
+// Daniel Loh, A0252099X
+
 let req;
 let res;
 
@@ -218,6 +220,8 @@ describe("categoryControlller", () => {
     consoleSpy.mockRestore();
   });
 });
+
+// Daniel Loh, A0252099X
 
 describe("singleCategoryController", () => {
   it("should return a single category successfully", async () => {
