@@ -3,54 +3,96 @@
 ## Workload distribution
 
 ### Kailash
+
+#### Client Tests (Frontend)
+
+##### Context
 - context/auth.js
-- pages/Auth/Register.js 
-- pages/Auth/Login.js
+
+##### Components
 - components/Routes/Private.js
 - components/UserMenu.js
+
+##### Pages
+- pages/Auth/Register.js 
+- pages/Auth/Login.js
 - pages/user/Dashboard.js
 - pages/user/Profile.js
 - pages/admin/Users.js
+
+#### Server Tests (Backend)
+
+##### helpers
 - helpers/authHelper.js
+
+##### middlewares
 - middlewares/authMiddleware.js
-- controllers/authController.js
-    1. registerController
-    2. loginController
-    3. forgotPasswordController
-    4. testController
+
+##### Controllers
+**controllers/authController.js**
+- registerController
+- loginController
+- forgotPasswordController
+- testController
+
+##### Models
 - models/userModel.js
 
 ### Danielle
-- components/AdminMenu.js
-- pages/admin/AdminDashboard.js
+
+#### Client Tests (Frontend)
+
+##### Components
 - components/Form/CategoryForm.js
+- components/AdminMenu.js
+
+##### Pages
+- pages/admin/AdminDashboard.js
 - pages/admin/CreateCategory.js
 - pages/admin/CreateProduct.js
 - pages/admin/UpdateProduct.js
 - pages/admin/AdminOrders.js
-- controllers/categoryController.js
-   1. createCategoryController
-   2. updateCategoryController
-   3. deleteCategoryController
-- controllers/productController.js
-   1. getProductController
-   2. getSingleProductController
-   3. productPhotoController
+
+#### Server Tests (Backend)
+
+##### Controllers
+**controllers/categoryController.js**
+- createCategoryController
+- updateCategoryController
+- deleteCategoryController
+
+**controllers/productController.js**
+- getProductController
+- getSingleProductController
+- productPhotoController
 
 ### Owen
+
+#### Client Tests (Frontend)
+
+##### Components
 - components/From/searchInput.js
+
+##### Context
 - context/cart.js
 - context/search.js
+
+##### Pages
 - pages/CartPage.js
 - pages/Search.js
-- controllers/authController.js
-   1. updateProfileController
-   2. getOrderController
-   3. getAllOrdersController
-   4. orderStatusController
-- controllers/productController.js
-   1. searchProductController
-   2. relatedProductController (formerly realtedProductController)
+
+#### Server Tests (Backend)
+
+##### Controllers
+**controllers/authController.js**
+- updateProfileController
+- getOrderController
+- getAllOrdersController
+- orderStatusController
+
+**controllers/productController.js**
+- searchProductController
+- relatedProductController (formerly realtedProductController)
 
 
 ### Daniel
