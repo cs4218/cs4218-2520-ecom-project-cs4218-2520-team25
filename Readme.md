@@ -20,7 +20,22 @@
     4. testController
 - models/userModel.js
 
-
+### Danielle
+- components/AdminMenu.js
+- pages/admin/AdminDashboard.js
+- components/Form/CategoryForm.js
+- pages/admin/CreateCategory.js
+- pages/admin/CreateProduct.js
+- pages/admin/UpdateProduct.js
+- pages/admin/AdminOrders.js
+- controllers/categoryController.js
+   1. createCategoryController
+   2. updateCategoryController
+   3. deleteCategoryController
+- controllers/productController.js
+   1. getProductController
+   2. getSingleProductController
+   3. productPhotoController
 
 ## 1. Project Introduction
 
