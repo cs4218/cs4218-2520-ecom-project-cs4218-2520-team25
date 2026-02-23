@@ -826,6 +826,7 @@ beforeEach(() => {
 });
 
 describe("searchProductController", () => {
+    // Owen Yeo Le Yang A0252047L
     it("should query name/description by regex (case-insensitive) and exclude photo", async () => {
         const req = { params: { keyword: "phone" } };
         const res = makeRes();
@@ -855,6 +856,7 @@ describe("searchProductController", () => {
         expect(res.json).toHaveBeenCalledWith(mockProducts);
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("should return empty array when no matches", async () => {
         const req = { params: { keyword: "nonexistent" } };
         const res = makeRes();
@@ -867,6 +869,7 @@ describe("searchProductController", () => {
         expect(res.json).toHaveBeenCalledWith([]);
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("should still build query if keyword is undefined", async () => {
         const req = { params: { keyword: undefined } };
         const res = makeRes();
@@ -886,6 +889,7 @@ describe("searchProductController", () => {
         expect(res.json).toHaveBeenCalledWith([]);
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("should return 400 if productModel.find throws synchronously", async () => {
         const req = { params: { keyword: "phone" } };
         const res = makeRes();
@@ -906,6 +910,7 @@ describe("searchProductController", () => {
         );
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("should return 400 if select() rejects", async () => {
         const req = { params: { keyword: "phone" } };
         const res = makeRes();
@@ -925,6 +930,7 @@ describe("searchProductController", () => {
         );
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("should not accidentally include photo in response (contract check)", async () => {
         const req = { params: { keyword: "phone" } };
         const res = makeRes();

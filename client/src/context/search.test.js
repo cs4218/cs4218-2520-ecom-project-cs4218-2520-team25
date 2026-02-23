@@ -31,6 +31,7 @@ describe("SearchProvider & useSearch Hook", () => {
     jest.clearAllMocks();
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("should initialize with default search state", () => {
     render(
       <SearchProvider>
@@ -43,6 +44,7 @@ describe("SearchProvider & useSearch Hook", () => {
     expect(screen.getByTestId("first-result").textContent).toBe("none");
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("should update search state via setSearch", () => {
     render(
       <SearchProvider>

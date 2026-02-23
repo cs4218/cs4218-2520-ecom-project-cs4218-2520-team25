@@ -18,6 +18,7 @@ describe("SearchInput", () => {
     useSearch.mockReturnValue([{ keyword: "", results: [] }, mockSetValues]);
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("renders search input with current keyword", () => {
     useSearch.mockReturnValue([{ keyword: "phone", results: [] }, mockSetValues]);
 
@@ -27,6 +28,7 @@ describe("SearchInput", () => {
     expect(screen.getByRole("button", { name: /search/i })).toBeInTheDocument();
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("updates keyword on input change", () => {
     const values = { keyword: "", results: [] };
     useSearch.mockReturnValue([values, mockSetValues]);
@@ -38,6 +40,7 @@ describe("SearchInput", () => {
     expect(mockSetValues).toHaveBeenCalledWith({ ...values, keyword: "laptop" });
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("submits search, stores results, and navigates to /search", async () => {
     const values = { keyword: "shoe", results: [] };
     const apiResults = [{ _id: "p1", name: "Running Shoe" }];
@@ -55,6 +58,7 @@ describe("SearchInput", () => {
     });
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("handles search API failure gracefully", async () => {
     const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
     const values = { keyword: "shoe", results: [] };
