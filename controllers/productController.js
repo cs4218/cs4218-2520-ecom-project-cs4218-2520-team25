@@ -1,6 +1,9 @@
 import productModel from "../models/productModel.js";
 import categoryModel from "../models/categoryModel.js";
 import orderModel from "../models/orderModel.js";
+
+// Daniel Loh, A0252099X
+// Refactored gateway for easier testability
 import { gateway } from "./braintreeGateway.js";
 
 import fs from "fs";

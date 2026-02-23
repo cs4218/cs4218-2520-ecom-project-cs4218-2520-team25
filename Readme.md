@@ -53,6 +53,43 @@
    2. relatedProductController (formerly realtedProductController)
 
 
+### Daniel
+
+#### Client Tests (Frontend)
+
+##### Hooks
+- hooks/useCategory.test.js
+
+##### Pages
+- pages/Categories.test.js
+- pages/About.test.js
+- pages/Pagenotfound.test.js
+
+##### Components
+- components/Layout.test.js
+- components/Header.test.js
+- components/Footer.test.js
+- components/Spinner.test.js
+
+#### Server Tests (Backend)
+
+##### Controllers
+**productController**
+- productCategoryController.test.js
+- braintreeTokenController.test.js
+- brainTreePaymentController.test.js
+
+**categoryController**
+- categoryControlller.test.js
+- singleCategoryController.test.js
+
+##### Models
+- models/productModel.test.js
+- models/categoryModel.test.js
+
+##### Database
+- db.test.js
+
 ## 1. Project Introduction
 
 Virtual Vault is a full-stack MERN (MongoDB, Express.js, React.js, Node.js) e-commerce website, offering seamless connectivity and user-friendly features. The platform provides a robust framework for online shopping. The website is designed to adapt to evolving business needs and can be efficiently extended.

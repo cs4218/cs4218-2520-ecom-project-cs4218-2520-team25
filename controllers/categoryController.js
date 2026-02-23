@@ -80,6 +80,7 @@ export const categoryControlller = async (req, res) => {
 };
 
 // single category
+// Daniel Loh, A0252099X - fixed typo
 export const singleCategoryController = async (req, res) => {
   try {
     const category = await categoryModel.findOne({ slug: req.params.slug });

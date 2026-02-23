@@ -1,3 +1,5 @@
+// Daniel Loh, A0252099X
+
 jest.unmock('./Layout');
 
 import React from "react";

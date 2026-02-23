@@ -1,3 +1,5 @@
+// Daniel Loh, A0252099X
+
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import About from "./About";
@@ -69,19 +71,19 @@ describe("About Page", () => {
     expect(img).not.toHaveAttribute("src"); // src missing
   });
 
-    test("renders even if paragraph is empty", () => {
+  test("renders even if paragraph is empty", () => {
     const EmptyTextAbout = () => (
-        <Layout title="About us - Ecommerce app">
+      <Layout title="About us - Ecommerce app">
         <div className="row contactus">
-            <div className="col-md-4">
+          <div className="col-md-4">
             <p className="text-justify mt-2"></p>
-            </div>
+          </div>
         </div>
-        </Layout>
+      </Layout>
     );
 
     const { container } = render(<EmptyTextAbout />);
     const paragraph = container.querySelector("p.text-justify.mt-2");
     expect(paragraph).toBeInTheDocument();
-    });
+  });
 });

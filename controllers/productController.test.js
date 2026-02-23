@@ -1073,6 +1073,8 @@ describe("relatedProductController", () => {
     });
 });
 
+// Daniel Loh, A0252099X
+
 beforeAll(async () => {
     // dynamic import AFTER mocks are registered
     const mod = await import("./productController.js");
@@ -1186,6 +1188,8 @@ describe("productCategoryController", () => {
     });
 });
 
+// Daniel Loh, A0252099X
+
 beforeAll(async () => {
     const mod = await import("./productController.js");
     braintreeTokenController = mod.braintreeTokenController;
@@ -1247,6 +1251,8 @@ describe("braintreeTokenController", () => {
         consoleSpy.mockRestore();
     });
 });
+
+// Daniel Loh, A0252099X
 
 beforeAll(async () => {
     const mod = await import("./productController.js");
