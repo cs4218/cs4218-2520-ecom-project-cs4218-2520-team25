@@ -3,6 +3,8 @@ import { render } from "@testing-library/react";
 import "@testing-library/jest-dom/extend-expect";
 import Contact from "./Contact";
 
+// Han Tae Won (A0221684E)
+
 jest.mock("react-icons/bi", () => ({
     BiMailSend: () => <span>icons</span>,
     BiPhoneCall: () => <span>icons</span>,
