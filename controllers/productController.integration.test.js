@@ -3,7 +3,11 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import slugify from "slugify";
 import productModel from "../models/productModel";
 import categoryModel from "../models/categoryModel";
-import { createProductController, getProductController } from "./productController";
+import { 
+  createProductController, 
+  getProductController, 
+  getSingleProductController 
+} from "./productController";
 
 let mongoServer;
 
@@ -413,5 +417,142 @@ describe("getProductController Integration Test (with productModel)", () => {
 
     // reconnect for other tests
     await mongoose.connect(mongoServer.getUri());
+  });
+});
+
+describe("getSingleProductController Integration Test (with productModel)", () => {
+  test("should return a single product by slug", async () => {
+    const category = await categoryModel.create({
+      name: "Electronics",
+      slug: "electronics",
+    });
+
+    const products = await productModel.create([
+      {
+        name: "Product 1",
+        slug: "product-1",
+        description: "Description of Product 1",
+        price: 100,
+        category: category._id,
+        quantity: 1000,
+        shipping: true,
+      },
+      {
+        name: "Product 2",
+        slug: "product-2",
+        description: "Description of Product 2",
+        price: 200,
+        category: category._id,
+        quantity: 2000,
+        shipping: false,
+      },
+    ]);
+
+    const req = {
+      params: { slug: "product-1" },
+    };
+    const res = mockResponse();
+
+    await getSingleProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(true);
+    expect(data.product.name).toBe("Product 1");
+    expect(data.product.description).toBe("Description of Product 1");
+    expect(data.product.price).toBe(100);
+    expect(data.product.category.name).toBe("Electronics");
+    expect(data.product.quantity).toBe(1000);
+    expect(data.product.shipping).toBe(true);
+  });
+
+  test("should return null product when slug does not exist", async () => {
+    const category = await categoryModel.create({
+      name: "Electronics",
+      slug: "electronics",
+    });
+
+    const products = await productModel.create([
+      {
+        name: "Product 1",
+        slug: "product-1",
+        description: "Description of Product 1",
+        price: 100,
+        category: category._id,
+        quantity: 1000,
+        shipping: true,
+      },
+      {
+        name: "Product 2",
+        slug: "product-2",
+        description: "Description of Product 2",
+        price: 200,
+        category: category._id,
+        quantity: 2000,
+        shipping: false,
+      },
+    ]);
+
+    const req = {
+      params: { slug: "non-existent-slug" },
+    };
+    const res = mockResponse();
+
+    await getSingleProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(true);
+    expect(data.product).toBeNull();
+  });
+
+  test("should not return photo field", async () => {
+    const category = await categoryModel.create({
+      name: "Electronics",
+      slug: "electronics",
+    });
+
+    const product = await productModel.create({
+      name: "Product With Photo",
+      slug: "product-with-photo",
+      description: "Product with photo description",
+      price: 100,
+      category: category._id,
+      quantity: 1000,
+      photo: {
+        data: Buffer.from("test"),
+        contentType: "image/jpeg",
+      },
+      shipping: true,
+    });
+
+    const req = {
+      params: { slug: "product-with-photo" },
+    };
+    const res = mockResponse();
+
+    await getSingleProductController(req, res);
+
+    const data = res.send.mock.calls[0][0];
+    expect(Object.keys(data.product)).not.toContain("photo");
+  });
+
+  test("should handle errors", async () => {
+    await mongoose.disconnect();
+
+    const req = {
+      params: { slug: "random-slug" },
+    };
+    const res = mockResponse();
+
+    await getSingleProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+
+    await mongoose.connect(mongoServer.getUri()); // reconnect for other tests
   });
 });
