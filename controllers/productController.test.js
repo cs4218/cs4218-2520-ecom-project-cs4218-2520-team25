@@ -153,7 +153,7 @@ describe("createProductController", () => {
         );
     });
 
-    test("error: save throws -> returns 500 Error in crearing product", async () => {
+    test("error: save throws -> returns 500 Error in creating product", async () => {
         slugify.mockReturnValue("a-slug");
 
         const saveMock = jest.fn().mockRejectedValue(new Error("DB down"));
@@ -180,7 +180,7 @@ describe("createProductController", () => {
         expect(res.send).toHaveBeenCalledWith(
             expect.objectContaining({
                 success: false,
-                message: "Error in crearing product",
+                message: "Error in creating product",
             })
         );
     });

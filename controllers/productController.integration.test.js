@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import slugify from "slugify";
 import productModel from "../models/productModel";
 import categoryModel from "../models/categoryModel";
-import { getProductController } from "./productController";
+import { createProductController, getProductController } from "./productController";
 
 let mongoServer;
 
@@ -38,6 +39,235 @@ const mockResponse = () => {
 // ===========================================================
 // TESTS
 // ===========================================================
+
+// Danielle Loh, A0257220N
+describe("createProductController Integration Test (with productModel)", () => {
+  test("should create a product successfully (without photo)", async () => {
+    const category = await categoryModel.create({
+      name: "Electronics",
+      slug: "electronics",
+    });
+
+    const req = {
+      fields: {
+        name: "Product 1",
+        description: "Description 1",
+        price: 100,
+        category: category._id,
+        quantity: 1000,
+        shipping: true
+      },
+      files: {},
+    };
+
+    const res = mockResponse();
+    await createProductController(req, res);
+
+    // check response
+    expect(res.status).toHaveBeenCalledWith(201);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(true);
+    expect(data.products.name).toBe("Product 1");
+
+    // check db
+    const addedProduct = await productModel.findOne({ name: "Product 1" });
+    expect(addedProduct).not.toBeNull();
+    expect(addedProduct.slug).toBe(slugify("Product 1"));
+    expect(addedProduct.price).toBe(100);
+    expect(addedProduct.category.toString()).toBe(category._id.toString());
+    expect(addedProduct.quantity).toBe(1000);
+    expect(addedProduct.shipping).toBe(true);
+  });
+
+  test("should create product with photo", async () => {
+    const category = await categoryModel.create({
+      name: "Electronics",
+      slug: "electronics",
+    });
+
+    const req = {
+      fields: {
+        name: "Product 1",
+        description: "Description 1",
+        price: 100,
+        category: category._id,
+        quantity: 1000,
+        shipping: true
+      },
+      files: {
+        photo: {
+          path: __filename,
+          type: "image/jpeg",
+          size: 500,
+        },
+      },
+    };
+
+    const res = mockResponse();
+    await createProductController(req, res);
+
+    const addedProduct = await productModel.findOne({ name: "Product 1" });
+
+    expect(addedProduct.photo.data).toBeDefined();
+    expect(addedProduct.photo.contentType).toBe("image/jpeg");
+  });
+
+  test("should not create if name is missing", async () => {
+    const req = {
+      fields: {
+        description: "Product with no name.",
+        price: 100,
+        category: "cat1",
+        quantity: 1000,
+      },
+      files: {},
+    };
+
+    const res = mockResponse();
+    await createProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send.mock.calls[0][0].error).toBe("Name is Required");
+
+    const addedProduct = await productModel.findOne({ description: "Product with no name." });
+    expect(addedProduct).toBeNull();
+  });
+
+  test("should not create if description is missing", async () => {
+    const req = {
+      fields: {
+        name: "No Desc Product",
+        price: 100,
+        category: "cat1",
+        quantity: 1000,
+      },
+      files: {},
+    };
+
+    const res = mockResponse();
+    await createProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send.mock.calls[0][0].error).toBe("Description is Required");
+
+    const addedProduct = await productModel.findOne({ name: "No Desc Product" });
+    expect(addedProduct).toBeNull();
+  });
+
+  test("should not create if price is missing", async () => {
+    const req = {
+      fields: {
+        name: "No Price Product",
+        description:"Product with no price.",
+        category: "cat1",
+        quantity: 1000,
+      },
+      files: {},
+    };
+
+    const res = mockResponse();
+    await createProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send.mock.calls[0][0].error).toBe("Price is Required");
+
+    const addedProduct = await productModel.findOne({ name: "No Price Product" });
+    expect(addedProduct).toBeNull();
+  }); 
+
+  test("should not create if category is missing", async () => {
+    const req = {
+      fields: {
+        name: "No Category Product",
+        description:"Product with no category.",
+        price: 100,
+        quantity: 1000,
+      },
+      files: {},
+    };
+
+    const res = mockResponse();
+    await createProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send.mock.calls[0][0].error).toBe("Category is Required");
+
+    const addedProduct = await productModel.findOne({  name: "No Category Product" });
+    expect(addedProduct).toBeNull();
+  }); 
+
+  test("should not create if quantity is missing", async () => {
+    const req = {
+      fields: {
+        name: "No Quantity Product",
+        description:"Product with no quantity.",
+        category: "cat1",
+        price: 100,
+      },
+      files: {},
+    };
+
+    const res = mockResponse();
+    await createProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send.mock.calls[0][0].error).toBe("Quantity is Required");
+
+    const addedProduct = await productModel.findOne({  name: "No Quantity Product" });
+    expect(addedProduct).toBeNull();
+  }); 
+
+  test("should not create if photo exceeds size limit", async () => {
+    const req = {
+      fields: {
+        name: "Large Photo Size Product",
+        description:"Product with overly large photo size.",
+        category: "cat1",
+        price: 100,
+        quantity: 1000,
+      },
+      files: {
+        photo: {
+          path: __filename,
+          type: "image/jpeg",
+          size: 2000000,
+        },
+      },
+    };
+
+    const res = mockResponse();
+    await createProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send.mock.calls[0][0].error).toBe("photo is Required and should be less then 1mb");
+
+    const addedProduct = await productModel.findOne({  name: "Large Photo Size Product" });
+    expect(addedProduct).toBeNull();
+  });
+
+  test("should handle errors", async () => {
+    await mongoose.disconnect();
+
+    const req = {
+      fields: {
+        name: "Error Product",
+        description: "desc",
+        price: 100,
+        category: "invalid cat",
+        quantity: 1,
+      },
+      files: {},
+    };
+
+    const res = mockResponse();
+    await createProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.send.mock.calls[0][0].success).toBe(false);
+
+    await mongoose.connect(mongoServer.getUri()); // reconnect for other tests
+  });
+});
 
 // Danielle Loh, A0257220N
 describe("getProductController Integration Test (with productModel)", () => {
@@ -80,17 +310,21 @@ describe("getProductController Integration Test (with productModel)", () => {
     expect(responseData.success).toBe(true);
     expect(responseData.countTotal).toBe(2);
 
+    const returnedNames = responseData.products.map(p => p.name);
+    expect(returnedNames).toEqual(
+      expect.arrayContaining(["Product 1", "Product 2"])
+    );
+
     // controller sorts by createdAt
     // so last product inserted should be at the start of the list
-    const firstProduct = responseData.products[0].toObject();
-    expect(firstProduct.name).toBe(products[products.length - 1].name);
-    expect(firstProduct.slug).toBe(products[products.length - 1].slug);
-    expect(firstProduct.description).toBe(products[products.length - 1].description);
-    expect(firstProduct.price).toBe(products[products.length - 1].price);
-    expect(firstProduct.category.name).toBe("Electronics");
-    expect(firstProduct.quantity).toBe(products[products.length - 1].quantity);
-    expect(firstProduct.shipping).toBe(products[products.length - 1].shipping);
-    expect(firstProduct.photo).toBeUndefined();
+    const product1 = responseData.products.find(p => p.name === "Product 1").toObject();
+    expect(product1.slug).toBe(products[0].slug);
+    expect(product1.description).toBe(products[0].description);
+    expect(product1.price).toBe(products[0].price);
+    expect(product1.category.name).toBe("Electronics");
+    expect(product1.quantity).toBe(products[0].quantity);
+    expect(product1.shipping).toBe(products[0].shipping);
+    expect(product1.photo).toBeUndefined();
   });
 
   test("should return an empty array when no products exist", async () => {
