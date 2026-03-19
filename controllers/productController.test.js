@@ -228,7 +228,7 @@ describe('getProductController', () => {
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.send).toHaveBeenCalledWith({
             success: true,
-            counTotal: 1,
+            countTotal: 1,
             message: "All Products ",
             products: fakeProducts,
         });
