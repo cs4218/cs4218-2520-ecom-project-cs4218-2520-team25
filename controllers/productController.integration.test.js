@@ -5,10 +5,12 @@ import productModel from "../models/productModel";
 import categoryModel from "../models/categoryModel";
 import { 
   createProductController, 
+  deleteProductController, 
   getProductController, 
   getSingleProductController, 
   productPhotoController
 } from "./productController";
+import { describe } from "node:test";
 
 let mongoServer;
 
@@ -662,6 +664,92 @@ describe("productPhotoController Integration Test (with productModel)", () => {
     const res = mockResponse();
 
     await productPhotoController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+
+    await mongoose.connect(mongoServer.getUri());
+  });
+});
+
+// Danielle Loh, A0257220N
+const seedProduct = async () => {
+  const category = await categoryModel.create({
+    name: "Electronics",
+    slug: "electronics",
+  });
+
+  const product = await productModel.create({
+    name: "Test Product",
+    slug: "test-product",
+    description: "Test product description",
+    price: 100,
+    category: category._id,
+    quantity: 1000,
+    shipping: true,
+  });
+
+  return product;
+}
+
+describe("deleteProductController Integration Test (with productModel)", () => {
+  test("should delete existing product seccessfully", async () => {
+    const product = await seedProduct();
+
+    const req = {
+      params: { pid: product._id },
+    };
+    const res = mockResponse();
+
+    await deleteProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const responseData = res.send.mock.calls[0][0];
+    expect(responseData.success).toBe(true);
+
+    // database check
+    const deleteProduct = await productModel.findById(product._id);
+    expect(deleteProduct).toBeNull();
+  });
+
+  test("should still return success even if product does not exist", async () => {
+    const req = {
+      params: { pid: new mongoose.Types.ObjectId() },
+    };
+    const res = mockResponse();
+
+    await deleteProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(true);
+  });
+
+  test("should handle invalid product id", async () => {
+    const req = {
+      params: { pid: "invalid-pid" },
+    };
+    const res = mockResponse();
+
+    await deleteProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+  });
+
+  test("should handle database errors", async () => {
+    const product = await seedProduct();
+
+    await mongoose.disconnect();
+
+    const req = {
+      params: { pid: product._id },
+    };
+    const res = mockResponse();
+
+    await deleteProductController(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
     const data = res.send.mock.calls[0][0];
