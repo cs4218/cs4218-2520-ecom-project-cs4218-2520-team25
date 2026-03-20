@@ -1,4 +1,4 @@
-import { loginController, registerController } from "../controllers/authController";
+import { loginController, registerController, forgotPasswordController } from "../controllers/authController";
 import userModel from "../models/userModel";
 import { hashPassword } from "../helpers/authHelper";
 import mongoose from "mongoose";
@@ -316,5 +316,145 @@ describe("Register Controller Integration Tests", () => {
 
     // Cleanup: Add the newly created user's ID to the list
     createdUserIds.push(savedUser._id);
+  });
+});
+
+
+describe("Forgot Password Controller Integration Tests", () => {
+  beforeAll(async () => {
+    const url = process.env.MONGO_URL
+    await mongoose.connect(url);
+  });
+
+  afterAll(async () => {
+    await mongoose.connection.close();
+  });
+
+  let createdUserIds = [];
+
+  afterEach(async () => {
+    if (createdUserIds.length > 0) {
+      await userModel.deleteMany({ _id: { $in: createdUserIds } });
+      createdUserIds = [];
+    }
+  });
+
+  //  Missing Fields
+
+  test("test_forgot_password_missing_fields_returns_400", async () => {
+    // 1. Arrange
+    const req = {
+      body: {
+        email: "test@test.com",
+        answer: "blue",
+        // newPassword missing
+      },
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    // 2. Act
+    await forgotPasswordController(req, res);
+
+    // 3. Assert
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.send).toHaveBeenCalledWith(
+      expect.objectContaining({ message: "New Password is required" })
+    );
+  });
+
+  // Incorrect Answer/Email Combination 
+
+  test("test_forgot_password_wrong_answer_returns_401", async () => {
+    // 1. Arrange
+    const email = "security@test.com";
+    const user = await new userModel({
+      name: "Security User",
+      email: email,
+      password: "oldPasswordHash",
+      phone: "123",
+      address: "123",
+      answer: "CorrectAnswer", // Set correct answer in DB
+    }).save();
+    createdUserIds.push(user._id);
+
+    const req = {
+      body: {
+        email: email,
+        answer: "WrongAnswer", // Provide incorrect answer
+        newPassword: "newSecurePassword",
+      },
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    // 2. Act
+    await forgotPasswordController(req, res);
+
+    // 3. Assert
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        message: "Wrong Email Or Answer",
+      })
+    );
+  });
+
+  // Successful Password Reset
+
+  test("test_forgot_password_valid_reset_updates_db_and_returns_200", async () => {
+    // 1. Arrange
+    const email = "reset@test.com";
+    const secretAnswer = "MyFirstPet";
+    const oldPassword = "oldPassword123";
+    const newPassword = "brandNewPassword456";
+
+    const user = await new userModel({
+      name: "Reset User",
+      email: email,
+      password: await hashPassword(oldPassword),
+      phone: "555555",
+      address: "Road",
+      answer: secretAnswer,
+    }).save();
+    createdUserIds.push(user._id);
+
+    const req = {
+      body: {
+        email: email,
+        answer: secretAnswer,
+        newPassword: newPassword,
+      },
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn(),
+    };
+
+    // 2. Act
+    await forgotPasswordController(req, res);
+
+    // 3. Assert
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+        message: "Password Reset Successfully",
+      })
+    );
+
+    // Integration check: Retrieve user from DB and verify the password has changed
+    const updatedUser = await userModel.findById(user._id);
+    
+    // Check that the new password is NOT the old one and NOT the plain text new password
+    expect(updatedUser.password).not.toBe(user.password);
+    expect(updatedUser.password).not.toBe(newPassword);
+    
+    
   });
 });
