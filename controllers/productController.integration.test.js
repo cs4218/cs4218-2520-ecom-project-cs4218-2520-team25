@@ -11,7 +11,6 @@ import {
   productPhotoController,
   updateProductController
 } from "./productController";
-import { describe } from "node:test";
 
 let mongoServer;
 
