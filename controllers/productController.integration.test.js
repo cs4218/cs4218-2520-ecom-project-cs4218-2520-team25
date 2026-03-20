@@ -6,7 +6,8 @@ import categoryModel from "../models/categoryModel";
 import { 
   createProductController, 
   getProductController, 
-  getSingleProductController 
+  getSingleProductController, 
+  productPhotoController
 } from "./productController";
 
 let mongoServer;
@@ -37,6 +38,7 @@ const mockResponse = () => {
   const res = {};
   res.status = jest.fn().mockReturnValue(res);
   res.send = jest.fn().mockReturnValue(res);
+  res.set = jest.fn().mockReturnValue(res);
   return res;
 }
 
@@ -420,6 +422,7 @@ describe("getProductController Integration Test (with productModel)", () => {
   });
 });
 
+// Danielle Loh, A0257220N
 describe("getSingleProductController Integration Test (with productModel)", () => {
   test("should return a single product by slug", async () => {
     const category = await categoryModel.create({
@@ -554,5 +557,116 @@ describe("getSingleProductController Integration Test (with productModel)", () =
     expect(data.success).toBe(false);
 
     await mongoose.connect(mongoServer.getUri()); // reconnect for other tests
+  });
+});
+
+// Danielle Loh, A0257220N
+const seedProductWithPhoto = async () => {
+  const category = await categoryModel.create({
+    name: "Electronics",
+    slug: "electronics",
+  });
+
+  const photoBuffer = Buffer.from("test");
+
+  const product = await productModel.create({
+    name: "Test Product",
+    slug: "test-product",
+    description: "Test product description",
+    price: 100,
+    category: category._id,
+    quantity: 1000,
+    photo: {
+      data: photoBuffer,
+      contentType: "image/jpeg",
+    },
+    shipping: true,
+  });
+
+  return { product, photoBuffer };
+};
+
+const seedProductWithNoPhoto = async () => {
+  const category = await categoryModel.create({
+    name: "Electronics",
+    slug: "electronics",
+  });
+
+  const product = await productModel.create({
+    name: "Test Product With No Photo",
+    slug: "test-product-with-no-photo",
+    description: "Test product with no photo description",
+    price: 200,
+    category: category._id,
+    quantity: 2000,
+    shipping: true,
+  });
+
+  return { product };
+};
+
+describe("productPhotoController Integration Test (with productModel)", () => {
+  test("should return product photo with correct content type", async () => {
+    const { product, photoBuffer } = await seedProductWithPhoto();
+
+    const req = {
+      params: { pid: product._id },
+    };
+    const res = mockResponse();
+
+    await productPhotoController(req, res);
+
+    expect(res.set).toHaveBeenCalledWith("Content-type", "image/jpeg");
+    expect(res.status).toHaveBeenCalledWith(200);
+    const data = res.send.mock.calls[0][0];
+    expect(data.equals(photoBuffer)).toBe(true);
+  });
+
+  test("should not return anything if product has no photo", async () => {
+    const { product } = await seedProductWithNoPhoto();
+
+    const req = {
+      params: { pid: product._id },
+    };
+    const res = mockResponse();
+
+    await productPhotoController(req, res);
+
+    expect(res.set).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalledWith(200);
+    expect(res.send).not.toHaveBeenCalled();
+  });
+
+  test("should handle invalid product id", async () => {
+    const req = {
+      params: { pid: "invalid-pid" },
+    };
+    const res = mockResponse();
+
+    await productPhotoController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+    expect(data.message).toBe("Error while getting photo");
+  });
+
+  test("should handle database errors", async () => {
+    const { product, photoBuffer } = await seedProductWithPhoto();
+
+    await mongoose.disconnect();
+
+    const req = {
+      params: { pid: product._id },
+    };
+    const res = mockResponse();
+
+    await productPhotoController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+
+    await mongoose.connect(mongoServer.getUri());
   });
 });
