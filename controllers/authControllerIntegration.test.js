@@ -1,4 +1,4 @@
-import { loginController } from "../controllers/authController";
+import { loginController, registerController } from "../controllers/authController";
 import userModel from "../models/userModel";
 import { hashPassword } from "../helpers/authHelper";
 import mongoose from "mongoose";
@@ -192,5 +192,129 @@ describe("Login Controller Integration Tests", () => {
     // Security Assertions: Ensure internal fields are excluded
     expect(responseData.user.password).toBeUndefined();
     expect(responseData.user.answer).toBeUndefined();
+  });
+});
+
+
+describe("Register Controller Integration Tests", () => {
+  beforeAll(async () => {
+    const url = process.env.MONGO_URL
+    await mongoose.connect(url);
+  });
+
+  afterAll(async () => {
+    await mongoose.connection.close();
+  });
+
+  let createdUserIds = [];
+
+  afterEach(async () => {
+    if (createdUserIds.length > 0) {
+      await userModel.deleteMany({ _id: { $in: createdUserIds } });
+      createdUserIds = [];
+    }
+  });
+
+  // Missing Fields 
+
+  test("test_register_missing_name_returns_error_message", async () => {
+    // 1. Arrange
+    const req = {
+      body: {
+        email: "test123@test.com",
+        password: "123",
+        phone: "123",
+        address: "street",
+        answer: "blue"
+      } // name is missing
+    };
+    const res = { send: jest.fn() };
+
+    // 2. Act
+    await registerController(req, res);
+
+    // 3. Assert
+    expect(res.send).toHaveBeenCalledWith({ message: "Name is Required" });
+  });
+
+  // Existing User 
+
+  test("test_register_duplicate_email_returns_failure", async () => {
+    // 1. Arrange
+    const existingEmail = "already@exists.com";
+    const user = await new userModel({
+      name: "Existing",
+      email: existingEmail,
+      password: "hash",
+      phone: "111",
+      address: "place",
+      answer: "secret"
+    }).save();
+    createdUserIds.push(user._id);
+
+    const req = {
+      body: {
+        name: "New Guy",
+        email: existingEmail,
+        password: "password",
+        phone: "222",
+        address: "elsewhere",
+        answer: "secret"
+      }
+    };
+    const res = { 
+        status: jest.fn().mockReturnThis(), 
+        send: jest.fn() 
+    };
+
+    // 2. Act
+    await registerController(req, res);
+
+    // 3. Assert
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith(expect.objectContaining({
+      success: false,
+      message: "User already registered please login"
+    }));
+  });
+
+  // Successful Registration
+
+  test("test_register_valid_data_saves_to_db_and_returns_201", async () => {
+    // 1. Arrange
+    const userData = {
+      name: "Kailash",
+      email: "kailash_new@test.com",
+      password: "securePassword123",
+      phone: "98765432",
+      address: "Singapore",
+      answer: "Software"
+    };
+    const req = { body: userData };
+    const res = { 
+        status: jest.fn().mockReturnThis(), 
+        send: jest.fn() 
+    };
+
+    // 2. Act
+    await registerController(req, res);
+
+    // 3. Assert
+    expect(res.status).toHaveBeenCalledWith(201);
+    
+    const responseData = res.send.mock.calls[0][0];
+    expect(responseData.success).toBe(true);
+    expect(responseData.message).toBe("User Register Successfully");
+
+    // Integration check: Verify the user actually exists in the database
+    const savedUser = await userModel.findOne({ email: userData.email });
+    expect(savedUser).not.toBeNull();
+    expect(savedUser.name).toBe(userData.name);
+    
+    // Ensure the password was hashed (not stored in plain text)
+    expect(savedUser.password).not.toBe(userData.password);
+
+    // Cleanup: Add the newly created user's ID to the list
+    createdUserIds.push(savedUser._id);
   });
 });
