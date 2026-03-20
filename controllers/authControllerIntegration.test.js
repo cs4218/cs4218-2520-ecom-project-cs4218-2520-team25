@@ -1,4 +1,4 @@
-import { loginController, registerController, forgotPasswordController } from "../controllers/authController";
+import { loginController, registerController, forgotPasswordController, updateProfileController } from "../controllers/authController";
 import userModel from "../models/userModel";
 import { hashPassword } from "../helpers/authHelper";
 import mongoose from "mongoose";
@@ -456,5 +456,131 @@ describe("Forgot Password Controller Integration Tests", () => {
     expect(updatedUser.password).not.toBe(newPassword);
     
     
+  });
+});
+
+
+describe("Update Profile Controller Integration Tests", () => {
+  beforeAll(async () => {
+    const url = process.env.MONGO_URL;
+    await mongoose.connect(url);
+  });
+
+  afterAll(async () => {
+    await mongoose.connection.close();
+  });
+
+  let createdUserIds = [];
+
+  afterEach(async () => {
+    if (createdUserIds.length > 0) {
+      await userModel.deleteMany({ _id: { $in: createdUserIds } });
+      createdUserIds = [];
+    }
+  });
+
+  // Password Length 
+
+  test("test_updateProfile_short_password_returns_error_json", async () => {
+    // 1. Arrange
+    const userId = new mongoose.Types.ObjectId();
+    const req = {
+      user: { _id: userId },
+      body: { password: "123" } // Boundary: < 6 characters
+    };
+    const res = { 
+      json: jest.fn() 
+    };
+
+    // 2. Act
+    await updateProfileController(req, res);
+
+    // 3. Assert
+    expect(res.json).toHaveBeenCalledWith({
+      error: "Password is required and at least 6 characters long"
+    });
+  });
+
+  //  Partial Update (No Password)
+
+  test("test_updateProfile_name_only_updates_correctly", async () => {
+    // 1. Arrange
+    const originalUser = await new userModel({
+      name: "Old Name",
+      email: "update@test.com",
+      password: "hashedPassword123",
+      phone: "111",
+      address: "Old Address",
+      answer: "secret"
+    }).save();
+    createdUserIds.push(originalUser._id);
+
+    const req = {
+      user: { _id: originalUser._id },
+      body: { name: "New Name" } // Only updating name
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn()
+    };
+
+    // 2. Act
+    await updateProfileController(req, res);
+
+    // 3. Assert
+    expect(res.status).toHaveBeenCalledWith(200);
+    const responseData = res.send.mock.calls[0][0];
+    
+    expect(responseData.updatedUser.name).toBe("New Name");
+    expect(responseData.updatedUser.phone).toBe("111"); // Should remain unchanged
+    
+    // Database Verification
+    const dbUser = await userModel.findById(originalUser._id);
+    expect(dbUser.name).toBe("New Name");
+  });
+
+  // Full Profile Update with Password 
+
+  test("test_updateProfile_all_fields_success", async () => {
+    // 1. Arrange
+    const user = await new userModel({
+      name: "Kailash",
+      email: "kailash@test.com",
+      password: "oldHash",
+      phone: "000",
+      address: "Old Singapore",
+      answer: "Software"
+    }).save();
+    createdUserIds.push(user._id);
+
+    const newPassword = "newSecurePassword789";
+    const req = {
+      user: { _id: user._id },
+      body: {
+        name: "Kailash Updated",
+        phone: "999",
+        address: "New Singapore",
+        password: newPassword
+      }
+    };
+    const res = {
+      status: jest.fn().mockReturnThis(),
+      send: jest.fn()
+    };
+
+    // 2. Act
+    await updateProfileController(req, res);
+
+    // 3. Assert
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.send).toHaveBeenCalledWith(expect.objectContaining({
+      message: "Profile Updated Successfully"
+    }));
+
+    // Verification of Hash Integration
+    const updatedDbUser = await userModel.findById(user._id);
+    expect(updatedDbUser.name).toBe("Kailash Updated");
+    expect(updatedDbUser.password).not.toBe("oldHash");
+    expect(updatedDbUser.password).not.toBe(newPassword); 
   });
 });
