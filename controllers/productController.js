@@ -2,20 +2,12 @@ import productModel from "../models/productModel.js";
 import categoryModel from "../models/categoryModel.js";
 import orderModel from "../models/orderModel.js";
 
+// Daniel Loh, A0252099X
+// Refactored gateway for easier testability
+import { gateway } from "./braintreeGateway.js";
+
 import fs from "fs";
 import slugify from "slugify";
-import braintree from "braintree";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-//payment gateway
-var gateway = new braintree.BraintreeGateway({
-  environment: braintree.Environment.Sandbox,
-  merchantId: process.env.BRAINTREE_MERCHANT_ID,
-  publicKey: process.env.BRAINTREE_PUBLIC_KEY,
-  privateKey: process.env.BRAINTREE_PRIVATE_KEY,
-});
 
 export const createProductController = async (req, res) => {
   try {
@@ -56,7 +48,7 @@ export const createProductController = async (req, res) => {
     res.status(500).send({
       success: false,
       error,
-      message: "Error in crearing product",
+      message: "Error in creating product",
     });
   }
 };
@@ -73,7 +65,7 @@ export const getProductController = async (req, res) => {
       .sort({ createdAt: -1 });
     res.status(200).send({
       success: true,
-      counTotal: products.length,
+      countTotal: products.length,
       message: "All Products ",
       products,
     });
@@ -114,7 +106,9 @@ export const getSingleProductController = async (req, res) => {
 // Danielle Loh, A0257220N
 export const productPhotoController = async (req, res) => {
   try {
-    const product = await productModel.findById(req.params.pid).select("photo");
+    const product = await productModel.findById(req.params.pid)
+                                      .select("photo");
+    
     if (product.photo.data) {
       res.set("Content-type", product.photo.contentType);
       return res.status(200).send(product.photo.data);
@@ -129,7 +123,7 @@ export const productPhotoController = async (req, res) => {
   }
 };
 
-//delete controller
+// delete controller
 export const deleteProductController = async (req, res) => {
   try {
     await productModel.findByIdAndDelete(req.params.pid).select("-photo");

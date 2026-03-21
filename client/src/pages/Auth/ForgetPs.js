@@ -1,3 +1,5 @@
+// Kailashwaran, A0253385Y; Entire file
+
 import React, { useState } from "react";
 import Layout from "./../../components/Layout";
 import axios from "axios";
@@ -76,9 +78,6 @@ const ForgotPassword = () => {
           <button 
             type="submit" 
             className="btn btn-primary"
-            // onClick={(e) => 
-            //     handleSubmit(e)
-            //   }
             >
             Reset Password
           </button>

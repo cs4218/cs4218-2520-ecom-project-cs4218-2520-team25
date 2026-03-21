@@ -4,6 +4,7 @@ import orderModel from "../models/orderModel.js";
 import { comparePassword, hashPassword } from "./../helpers/authHelper.js";
 import JWT from "jsonwebtoken";
 
+// Kailashwaran, A0253385Y
 export const registerController = async (req, res) => {
   try {
     const { name, email, password, phone, address, answer } = req.body;
@@ -63,6 +64,7 @@ export const registerController = async (req, res) => {
 };
 
 //POST LOGIN
+// Kailashwaran, A0253385Y
 export const loginController = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -223,7 +225,7 @@ export const getAllOrdersController = async (req, res) => {
       .find({})
       .populate("products", "-photo")
       .populate("buyer", "name")
-      .sort({ createdAt: "-1" });
+      .sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     console.log(error);

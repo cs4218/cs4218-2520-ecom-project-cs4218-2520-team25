@@ -1,3 +1,5 @@
+// Daniel Loh, A0252099X
+
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -73,7 +75,7 @@ describe("Categories Component - Full Integration Style", () => {
   });
 
   test("handles API error gracefully", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => { });
 
     axios.get.mockRejectedValue(new Error("Network Error"));
 

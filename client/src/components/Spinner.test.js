@@ -1,3 +1,5 @@
+// Daniel Loh, A0252099X
+
 import React from "react";
 import * as Router from "react-router-dom";
 import { render, screen, act } from "@testing-library/react";
@@ -116,7 +118,7 @@ describe("Spinner Component", () => {
     render(<Spinner path={undefined} />);
 
     act(() => {
-        jest.advanceTimersByTime(3000);
+      jest.advanceTimersByTime(3000);
     });
 
     expect(mockNavigate).toHaveBeenCalledWith("/login", { state: undefined });

@@ -1,3 +1,5 @@
+// Daniel Loh, A0252099X
+
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -106,18 +108,18 @@ describe("Header Component", () => {
   });
 
   test("unauthenticated user does NOT see Dashboard and Logout", () => {
-  useAuth.mockReturnValue([null, jest.fn()]);
-  useCart.mockReturnValue([[]]);
-  useCategory.mockReturnValue([]);
+    useAuth.mockReturnValue([null, jest.fn()]);
+    useCart.mockReturnValue([[]]);
+    useCategory.mockReturnValue([]);
 
-  renderComponent();
+    renderComponent();
 
-  expect(screen.queryByText("Dashboard")).not.toBeInTheDocument();
-  expect(screen.queryByText("Logout")).not.toBeInTheDocument();
+    expect(screen.queryByText("Dashboard")).not.toBeInTheDocument();
+    expect(screen.queryByText("Logout")).not.toBeInTheDocument();
 
-  // Positive assertion
-  expect(screen.getByText("Login")).toBeInTheDocument();
-});
+    // Positive assertion
+    expect(screen.getByText("Login")).toBeInTheDocument();
+  });
 
   // =============================
   // Authenticated State
@@ -139,21 +141,21 @@ describe("Header Component", () => {
   });
 
   test("authenticated user does NOT see Register and Login buttons", () => {
-  useAuth.mockReturnValue([
-    { user: { name: "Daniel", role: 0 } },
-    jest.fn(),
-  ]);
-  useCart.mockReturnValue([[]]);
-  useCategory.mockReturnValue([]);
+    useAuth.mockReturnValue([
+      { user: { name: "Daniel", role: 0 } },
+      jest.fn(),
+    ]);
+    useCart.mockReturnValue([[]]);
+    useCategory.mockReturnValue([]);
 
-  renderComponent();
+    renderComponent();
 
-  expect(screen.queryByText("Register")).not.toBeInTheDocument();
-  expect(screen.queryByText("Login")).not.toBeInTheDocument();
+    expect(screen.queryByText("Register")).not.toBeInTheDocument();
+    expect(screen.queryByText("Login")).not.toBeInTheDocument();
 
-  // Positive assertion (sanity)
-  expect(screen.getByText("Daniel")).toBeInTheDocument();
-});
+    // Positive assertion (sanity)
+    expect(screen.getByText("Daniel")).toBeInTheDocument();
+  });
 
   // =============================
   // Role-Based Rendering
@@ -177,20 +179,20 @@ describe("Header Component", () => {
   });
 
   test("admin role does NOT render user dashboard link", () => {
-  useAuth.mockReturnValue([
-    { user: { name: "Admin", role: 1 } },
-    jest.fn(),
-  ]);
-  useCart.mockReturnValue([[]]);
-  useCategory.mockReturnValue([]);
+    useAuth.mockReturnValue([
+      { user: { name: "Admin", role: 1 } },
+      jest.fn(),
+    ]);
+    useCart.mockReturnValue([[]]);
+    useCategory.mockReturnValue([]);
 
-  renderComponent();
+    renderComponent();
 
-  const dashboardLink = screen.getByText("Dashboard");
+    const dashboardLink = screen.getByText("Dashboard");
 
-  expect(dashboardLink).toHaveAttribute("href", "/dashboard/admin");
-  expect(dashboardLink).not.toHaveAttribute("href", "/dashboard/user");
-});
+    expect(dashboardLink).toHaveAttribute("href", "/dashboard/admin");
+    expect(dashboardLink).not.toHaveAttribute("href", "/dashboard/user");
+  });
 
   test("normal user role renders user dashboard link", () => {
     useAuth.mockReturnValue([
@@ -210,20 +212,20 @@ describe("Header Component", () => {
   });
 
   test("normal user does NOT render admin dashboard link", () => {
-  useAuth.mockReturnValue([
-    { user: { name: "User", role: 0 } },
-    jest.fn(),
-  ]);
-  useCart.mockReturnValue([[]]);
-  useCategory.mockReturnValue([]);
+    useAuth.mockReturnValue([
+      { user: { name: "User", role: 0 } },
+      jest.fn(),
+    ]);
+    useCart.mockReturnValue([[]]);
+    useCategory.mockReturnValue([]);
 
-  renderComponent();
+    renderComponent();
 
-  const dashboardLink = screen.getByText("Dashboard");
+    const dashboardLink = screen.getByText("Dashboard");
 
-  expect(dashboardLink).toHaveAttribute("href", "/dashboard/user");
-  expect(dashboardLink).not.toHaveAttribute("href", "/dashboard/admin");
-});
+    expect(dashboardLink).toHaveAttribute("href", "/dashboard/user");
+    expect(dashboardLink).not.toHaveAttribute("href", "/dashboard/admin");
+  });
 
   // =============================
   // Logout Behavior
@@ -267,14 +269,14 @@ describe("Header Component", () => {
   });
 
   test("empty cart shows 0 in badge", () => {
-  useAuth.mockReturnValue([null, jest.fn()]);
-  useCart.mockReturnValue([[]]); // empty cart
-  useCategory.mockReturnValue([]);
+    useAuth.mockReturnValue([null, jest.fn()]);
+    useCart.mockReturnValue([[]]); // empty cart
+    useCategory.mockReturnValue([]);
 
-  renderComponent();
+    renderComponent();
 
-  expect(screen.getByText("0")).toBeInTheDocument();
-});
+    expect(screen.getByText("0")).toBeInTheDocument();
+  });
 
   // =============================
   // Edge Cases

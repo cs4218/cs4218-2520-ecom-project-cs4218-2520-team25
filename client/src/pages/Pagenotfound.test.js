@@ -1,16 +1,18 @@
+// Daniel Loh, A0252099X
+
 import React from "react";
 import { MemoryRouter } from "react-router-dom";
 import { render, screen } from "@testing-library/react";
 import Pagenotfound from "./Pagenotfound";
 
 describe("Pagenotfound Component", () => {
-    const renderComponent = () =>
+  const renderComponent = () =>
     render(
-        <MemoryRouter>
-            <Pagenotfound />
-        </MemoryRouter>
+      <MemoryRouter>
+        <Pagenotfound />
+      </MemoryRouter>
     );
-
+  0
 
   test("renders without crashing", () => {
     renderComponent();

@@ -1,3 +1,5 @@
+// Kailashwaran, A0253385Y; Entire file
+
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(

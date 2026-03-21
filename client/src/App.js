@@ -25,6 +25,7 @@ import CartPage from "./pages/CartPage";
 import AdminOrders from "./pages/admin/AdminOrders";
 import ForgotPassword from "./pages/Auth/ForgetPs"
 
+// Kailashwaran, A0253385Y
 function App() {
   return (
     <>

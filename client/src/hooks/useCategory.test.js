@@ -1,3 +1,5 @@
+// Daniel Loh, A0252099X
+
 import { renderHook, waitFor } from "@testing-library/react";
 import axios from "axios";
 import useCategory from "../hooks/useCategory";
@@ -33,7 +35,7 @@ describe("useCategory hook", () => {
   });
 
   test("handles error when get fails", async () => {
-    axios.get.mockRejectedValue(new Error("error fetching...r"));
+    axios.get.mockRejectedValue(new Error("error fetching..."));
 
     const { result } = renderHook(() => useCategory());
 

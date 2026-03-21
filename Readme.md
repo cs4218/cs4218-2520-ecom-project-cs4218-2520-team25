@@ -1,5 +1,166 @@
 # CS4218 Project - Virtual Vault
 
+## MS1 CI URL
+[link to run](https://github.com/cs4218/cs4218-2520-ecom-project-cs4218-2520-team25/actions/runs/22292162848/job/64481405450)
+
+
+## Workload distribution
+
+### Kailash
+
+#### Client Tests (Frontend)
+
+##### Context
+- context/auth.js
+
+##### Components
+- components/Routes/Private.js
+- components/UserMenu.js
+
+##### Pages
+- pages/Auth/Register.js 
+- pages/Auth/Login.js
+- pages/user/Dashboard.js
+- pages/user/Profile.js
+- pages/admin/Users.js
+
+#### Server Tests (Backend)
+
+##### helpers
+- helpers/authHelper.js
+
+##### middlewares
+- middlewares/authMiddleware.js
+
+##### Controllers
+**controllers/authController.js**
+- registerController
+- loginController
+- forgotPasswordController
+- testController
+
+##### Models
+- models/userModel.js
+
+### Danielle
+
+#### Client Tests (Frontend)
+
+##### Components
+- components/Form/CategoryForm.js
+- components/AdminMenu.js
+
+##### Pages
+- pages/admin/AdminDashboard.js
+- pages/admin/CreateCategory.js
+- pages/admin/CreateProduct.js
+- pages/admin/UpdateProduct.js
+- pages/admin/AdminOrders.js
+
+#### Server Tests (Backend)
+
+##### Controllers
+**controllers/categoryController.js**
+- createCategoryController
+- updateCategoryController
+- deleteCategoryController
+
+**controllers/productController.js**
+- getProductController
+- getSingleProductController
+- productPhotoController
+
+### Owen
+
+#### Client Tests (Frontend)
+
+##### Components
+- components/From/searchInput.js
+
+##### Context
+- context/cart.js
+- context/search.js
+
+##### Pages
+- pages/CartPage.js
+- pages/Search.js
+
+#### Server Tests (Backend)
+
+##### Controllers
+**controllers/authController.js**
+- updateProfileController
+- getOrderController
+- getAllOrdersController
+- orderStatusController
+
+**controllers/productController.js**
+- searchProductController
+- relatedProductController (formerly realtedProductController)
+
+
+### Daniel
+
+#### Client Tests (Frontend)
+
+##### Hooks
+- hooks/useCategory.test.js
+
+##### Pages
+- pages/Categories.test.js
+- pages/About.test.js
+- pages/Pagenotfound.test.js
+
+##### Components
+- components/Layout.test.js
+- components/Header.test.js
+- components/Footer.test.js
+- components/Spinner.test.js
+
+#### Server Tests (Backend)
+
+##### Controllers
+**productController**
+- productCategoryController.test.js
+- braintreeTokenController.test.js
+- brainTreePaymentController.test.js
+
+**categoryController**
+- categoryControlller.test.js
+- singleCategoryController.test.js
+
+##### Models
+- models/productModel.test.js
+- models/categoryModel.test.js
+
+##### Database
+- db.test.js
+
+### Tae Won
+
+- **Pages / Admin**
+  - `pages/admin/Products.js`
+  - `controllers/productController.js`
+    1. `createProductController`
+    2. `deleteProductController`
+    3. `updateProductController`
+
+- **Product**
+  - `pages/ProductDetails.js`
+  - `pages/CategoryProduct.js`
+    4. `productFiltersController`
+    5. `productCountController`
+    6. `productListController`
+
+- **Contact**
+  - `pages/Contact.js`
+
+- **Policy**
+  - `pages/Policy.js`
+
+- **Home**
+  - `pages/Homepage.js`
+
 ## 1. Project Introduction
 
 Virtual Vault is a full-stack MERN (MongoDB, Express.js, React.js, Node.js) e-commerce website, offering seamless connectivity and user-friendly features. The platform provides a robust framework for online shopping. The website is designed to adapt to evolving business needs and can be efficiently extended.

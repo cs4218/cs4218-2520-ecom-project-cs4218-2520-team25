@@ -61,6 +61,7 @@ describe("updateProfileController", () => {
         jest.clearAllMocks();
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("Should reject short password", async () => {
         const shortPasswordReq = mockReq({body: {password: "abc"}, user: {_id: 1}});
         const res = mockRes();
@@ -78,6 +79,7 @@ describe("updateProfileController", () => {
         expect(res.send).not.toHaveBeenCalled();
     });
     
+    // Owen Yeo Le Yang A0252047L
     it("Should reject empty password", async () => {
         const shortPasswordReq = mockReq({body: {password: ""}, user: {_id: 1}});
         const res = mockRes();
@@ -96,6 +98,7 @@ describe("updateProfileController", () => {
     });
 
 
+    // Owen Yeo Le Yang A0252047L
     it("Should update name, phone, password and address successfully", async () => {
         const req = mockReq({
             body: {
@@ -143,6 +146,7 @@ describe("updateProfileController", () => {
         });
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("Should use defaults successfully", async () => {
         const req = mockReq({
             body: {
@@ -186,6 +190,7 @@ describe("updateProfileController", () => {
         });
     });
 
+        // Owen Yeo Le Yang A0252047L
         it("Should return 400 if update throws error", async () => {
         const req = mockReq({
             body: {
@@ -241,6 +246,7 @@ describe("getOrdersController", () => {
         jest.clearAllMocks();
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("Should get orders successfully", async () => {
         const fakeOrders = [makeOrder()]
         const query = {
@@ -261,6 +267,7 @@ describe("getOrdersController", () => {
         expect(res.json).toHaveBeenCalledWith(fakeOrders)
     })
 
+    // Owen Yeo Le Yang A0252047L
     it("Should throw 500 when there is an error", async () => {
         const error = Error("Invalid User ID");
         const query = {
@@ -293,6 +300,7 @@ describe("getAllOrdersController", () => {
         jest.clearAllMocks();
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("should fetch all orders, populate products and buyer, sort by createdAt desc, and return via res.json", async () => {
         // arrange
         const fakeOrders = [
@@ -317,13 +325,14 @@ describe("getAllOrdersController", () => {
         expect(orderModel.find).toHaveBeenCalledWith({});
         expect(query.populate).toHaveBeenNthCalledWith(1, "products", "-photo");
         expect(query.populate).toHaveBeenNthCalledWith(2, "buyer", "name");
-        expect(query.sort).toHaveBeenCalledWith({ createdAt: "-1" });
+        expect(query.sort).toHaveBeenCalledWith({ createdAt: -1 });
 
         // assert: response
         expect(res.json).toHaveBeenCalledWith(fakeOrders);
         expect(res.status).not.toHaveBeenCalled();
         expect(res.send).not.toHaveBeenCalled();
     });
+    // Owen Yeo Le Yang A0252047L
     it("Should throw 500 when there is an error", async () => {
         const error = Error("Invalid User ID");
         const query = {
@@ -341,7 +350,7 @@ describe("getAllOrdersController", () => {
         expect(orderModel.find).toHaveBeenCalledWith({});
         expect(query.populate).toHaveBeenNthCalledWith(1, "products", "-photo");
         expect(query.populate).toHaveBeenNthCalledWith(2, "buyer", "name");
-        expect(query.sort).toHaveBeenCalledWith({ createdAt: "-1" });
+        expect(query.sort).toHaveBeenCalledWith({ createdAt: -1 });
 
         expect(res.status).toHaveBeenCalledWith(500)
         expect(res.send).toHaveBeenCalledWith({
@@ -357,6 +366,7 @@ describe("orderStatusController", () => {
         jest.clearAllMocks();
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("should update order status when given orderId and status", async () => {
         const res = mockRes();
         const req = mockReq({
@@ -377,6 +387,7 @@ describe("orderStatusController", () => {
         expect(res.json).toHaveBeenCalledWith(updated);
     });
 
+    // Owen Yeo Le Yang A0252047L
     it("should catch synchronous throws from findByIdAndUpdate and return 500", async () => {
         // Rare, but useful to prove try/catch catches sync throws too.
         const req = mockReq({
@@ -403,6 +414,7 @@ describe("orderStatusController", () => {
 })
 
 
+// Kailashwaran, A0253385Y
 describe("Auth Controllers", () => {
   let req, res;
 
@@ -657,7 +669,7 @@ describe("Auth Controllers", () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Emai is required" }));
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Email is required" }));
     });
 
     // Missing answer
@@ -709,7 +721,7 @@ describe("Auth Controllers", () => {
 
       // Assert
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Emai is required" }));
+      expect(res.send).toHaveBeenCalledWith(expect.objectContaining({ message: "Email is required" }));
     });
 
     // Error in password reset

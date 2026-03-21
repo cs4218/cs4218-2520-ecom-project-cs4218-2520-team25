@@ -6,25 +6,57 @@ import Layout from "../../components/Layout";
 import { useAuth } from "../../context/auth";
 import moment from "moment";
 import { Select } from "antd";
+
 const { Option } = Select;
 
 const AdminOrders = () => {
+
+  // TEST
+  // const [orders, setOrders] = useState([
+  //   {
+  //     _id: "1",
+  //     status: "Not Process",
+  //     buyer: { name: "John Doe" },
+  //     createdAt: new Date(),
+  //     payment: { success: true },
+  //     products: [
+  //       { _id: "p1", name: "Product1", description: "A nice product", price: 100 },
+  //       { _id: "p2", name: "Product2", description: "Another product", price: 50 },
+  //     ],
+  //   },
+  //   {
+  //     _id: "2",
+  //     status: "Processing",
+  //     buyer: { name: "Jane Smith" },
+  //     createdAt: new Date(),s
+  //     payment: { success: false },
+  //     products: [
+  //       { _id: "p3", name: "Product3", description: "Cool product", price: 70 },
+  //     ],
+  //   },
+  // ]);
+
   const [status, setStatus] = useState([
     "Not Process",
     "Processing",
     "Shipped",
-    "deliverd",
-    "cancel",
+    "Delivered",
+    "Cancelled",
   ]);
-  const [changeStatus, setCHangeStatus] = useState("");
+  // const [changeStatus, setCHangeStatus] = useState("");
   const [orders, setOrders] = useState([]);
   const [auth, setAuth] = useAuth();
+
   const getOrders = async () => {
     try {
       const { data } = await axios.get("/api/v1/auth/all-orders");
-      setOrders(data);
+
+      if (data) {
+        setOrders(data);
+      }
     } catch (error) {
       console.log(error);
+      toast.error("Failed to fetch orders");
     }
   };
 
@@ -34,32 +66,38 @@ const AdminOrders = () => {
 
   const handleChange = async (orderId, value) => {
     try {
-      const { data } = await axios.put(`/api/v1/auth/order-status/${orderId}`, {
-        status: value,
-      });
+      const { data } = await axios.put(
+        `/api/v1/auth/order-status/${orderId}`, 
+        { status: value }
+      );
+
       getOrders();
     } catch (error) {
+      toast.error("Failed to update status");
       console.log(error);
     }
   };
+
   return (
     <Layout title={"All Orders Data"}>
       <div className="row dashboard">
         <div className="col-md-3">
           <AdminMenu />
         </div>
+
         <div className="col-md-9">
           <h1 className="text-center">All Orders</h1>
+
           {orders?.map((o, i) => {
             return (
-              <div className="border shadow">
+              <div className="border shadow" key={o._id}>
                 <table className="table">
                   <thead>
                     <tr>
                       <th scope="col">#</th>
                       <th scope="col">Status</th>
                       <th scope="col">Buyer</th>
-                      <th scope="col"> date</th>
+                      <th scope="col">Date</th>
                       <th scope="col">Payment</th>
                       <th scope="col">Quantity</th>
                     </tr>
@@ -69,7 +107,7 @@ const AdminOrders = () => {
                       <td>{i + 1}</td>
                       <td>
                         <Select
-                          bordered={false}
+                          variant={false}
                           onChange={(value) => handleChange(o._id, value)}
                           defaultValue={o?.status}
                         >
@@ -81,14 +119,15 @@ const AdminOrders = () => {
                         </Select>
                       </td>
                       <td>{o?.buyer?.name}</td>
-                      <td>{moment(o?.createAt).fromNow()}</td>
+                      <td>{moment(o?.createdAt).fromNow()}</td>
                       <td>{o?.payment.success ? "Success" : "Failed"}</td>
                       <td>{o?.products?.length}</td>
                     </tr>
                   </tbody>
                 </table>
+
                 <div className="container">
-                  {o?.products?.map((p, i) => (
+                  {o?.products?.map((p) => (
                     <div className="row mb-2 p-3 card flex-row" key={p._id}>
                       <div className="col-md-4">
                         <img
