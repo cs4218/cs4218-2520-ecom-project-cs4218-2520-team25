@@ -5,12 +5,16 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import ProductDetails from "./ProductDetails";
 
+// A0221684E Han Tae Won
+
 // mock Layout
 jest.mock("./../components/Layout", () => ({ children }) => (
   <div data-testid="layout">{children}</div>
 ));
 
 const mockNavigate = jest.fn();
+const mockSetCart = jest.fn();
+let mockCart = [];
 
 jest.mock("react-router-dom", () => {
   const actual = jest.requireActual("react-router-dom");
@@ -21,10 +25,8 @@ jest.mock("react-router-dom", () => {
   };
 });
 
-// mock cart hook
-const mockSetCart = jest.fn();
 jest.mock("./../context/cart", () => ({
-  useCart: () => [[], mockSetCart],
+  useCart: () => [mockCart, mockSetCart],
 }));
 
 jest.mock("axios");
@@ -34,16 +36,22 @@ jest.mock("react-hot-toast", () => ({
 }));
 
 describe("ProductDetails page", () => {
+  let setItemMock;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    process.env.REACT_APP_API = "";
-    jest.spyOn(Storage.prototype, "setItem").mockImplementation(() => {});
-    jest.spyOn(Storage.prototype, "getItem").mockImplementation(() => null);
-  });
+    mockCart = [];
 
-  afterEach(() => {
-    Storage.prototype.setItem.mockRestore();
-    Storage.prototype.getItem.mockRestore();
+    setItemMock = jest.fn();
+    Object.defineProperty(window, "localStorage", {
+      value: {
+        getItem: jest.fn(),
+        setItem: setItemMock,
+        removeItem: jest.fn(),
+        clear: jest.fn(),
+      },
+      writable: true,
+    });
   });
 
   test("loads product by slug and renders product info", async () => {
@@ -60,7 +68,6 @@ describe("ProductDetails page", () => {
       },
     });
 
-    // related products call
     axios.get.mockResolvedValueOnce({
       data: {
         products: [
@@ -91,8 +98,6 @@ describe("ProductDetails page", () => {
     expect(screen.getByText(/Description\s*:\s*New iPhone/i)).toBeInTheDocument();
     expect(screen.getByText(/Price\s*:\s*\$1,234\.00/i)).toBeInTheDocument();
     expect(screen.getByText(/Category\s*:\s*Phones/i)).toBeInTheDocument();
-
-    // related products heading + item
     expect(screen.getByText("Similar Products ➡️")).toBeInTheDocument();
     expect(await screen.findByText("iPhone Case")).toBeInTheDocument();
   });
@@ -122,22 +127,29 @@ describe("ProductDetails page", () => {
     );
 
     await screen.findByText(/Name\s*:\s*iPhone 15/i);
+    await screen.findByText(/No Similar Products found/i);
 
     const addBtn = screen.getByRole("button", { name: /add to cart/i });
     fireEvent.click(addBtn);
 
-    // expect(mockSetCart).toHaveBeenCalled();
-    // expect(Storage.prototype.setItem).toHaveBeenCalledWith(
-    //   "cart",
-    //   expect.any(String)
-    // );
-    // expect(toast.success).toHaveBeenCalledWith("Item Added to cart");
     await waitFor(() => {
-    expect(Storage.prototype.setItem).toHaveBeenCalledWith(
-        "cart",
-        expect.any(String)
-        );
+      expect(mockSetCart).toHaveBeenCalledWith([
+        expect.objectContaining({
+          _id: "p1",
+          name: "iPhone 15",
+        }),
+      ]);
     });
+
+    const savedCart = JSON.parse(setItemMock.mock.calls[0][1]);
+
+    expect(savedCart).toEqual([
+      expect.objectContaining({
+        _id: "p1",
+        name: "iPhone 15",
+      }),
+    ]);
+
     expect(toast.success).toHaveBeenCalledWith("Item Added to cart");
   });
 

@@ -64,20 +64,20 @@ describe("CategoryProduct page", () => {
       },
     });
 
-    render(
-      <MemoryRouter>
-        <CategoryProduct />
-      </MemoryRouter>
-    );
+  render(
+    <MemoryRouter>
+      <CategoryProduct />
+    </MemoryRouter>
+  );
 
-    const addBtn = screen.getByRole("button", { name: /add to cart/i });
-    fireEvent.click(addBtn);
+  // wait for API + render
+  await waitFor(() =>
+    expect(axios.get).toHaveBeenCalledWith(
+      "/api/v1/product/product-category/phones"
+    )
+  );
 
-    await waitFor(() =>
-      expect(axios.get).toHaveBeenCalledWith(
-        "/api/v1/product/product-category/phones"
-      )
-    );
+await screen.findByText("iPhone 15");
 
     expect(await screen.findByText("Category - Phones")).toBeInTheDocument();
     expect(screen.getByText("iPhone 15")).toBeInTheDocument();
