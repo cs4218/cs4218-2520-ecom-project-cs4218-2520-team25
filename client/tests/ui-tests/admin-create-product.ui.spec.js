@@ -2,6 +2,7 @@ const { test, expect } = require("@playwright/test");
 
 // Danielle Loh, A0257220N
 
+// admin email and password (created manually beforehand)
 const ADMIN_EMAIL = "admin_email@test.com";
 const ADMIN_PASSWORD = "testPassword@123";
 
@@ -26,6 +27,8 @@ test.describe("Admin Product Management - End-to-End Create Product Flow", () =>
     // create product
     // ===============================================================================
 
+    const productName = `Test Product ${Date.now()}`
+
     // category select
     const categoryDropdown = page.locator('.ant-select').first();
     await categoryDropdown.click();
@@ -34,10 +37,10 @@ test.describe("Admin Product Management - End-to-End Create Product Flow", () =>
     await option.click();
 
     // product name fill
-    await page.getByPlaceholder(/write a name/i).fill("Test Book");
+    await page.getByPlaceholder(/write a name/i).fill(productName);
 
     // product description fill
-    await page.getByPlaceholder(/write a description/i).fill("Test book description");
+    await page.getByPlaceholder(/write a description/i).fill(`Description of ${productName}`);
 
     // product price fill
     await page.getByPlaceholder(/write a price/i).fill("123");
@@ -50,36 +53,38 @@ test.describe("Admin Product Management - End-to-End Create Product Flow", () =>
 
     await page.waitForURL("**/dashboard/admin/products");
 
-    await expect(page.getByRole('heading', { name: 'Test Book' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: productName })).toBeVisible();
 
     // ===============================================================================
     // edit product
     // ===============================================================================
 
+    const newName = `Edited Product ${Date.now()}`
+
     // navigate to update product page
-    const testProductCard = page.locator('a.product-link', { hasText: 'Test Book' });
+    const testProductCard = page.locator('a.product-link', { hasText: productName });
     await testProductCard.click();
-    await expect(page.getByRole("heading", { name: "Update Product" })).toBeVisible(); // RIGHT
+    await expect(page.getByRole("heading", { name: "Update Product" })).toBeVisible();
 
     // update name
     const nameInput = page.getByPlaceholder(/write a name/i);
     await nameInput.click();
-    await nameInput.fill('Updated Product');
+    await nameInput.fill(newName);
 
     await page.getByRole("button", { name: /update product/i }).click();
 
     await page.waitForURL("**/dashboard/admin/products");
     await page.reload();
 
-    await expect(page.getByRole('heading', { name: 'Test Book' })).not.toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Updated Product' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: productName })).not.toBeVisible();
+    await expect(page.getByRole('heading', { name: newName })).toBeVisible();
 
     // ===============================================================================
     // delete product
     // ===============================================================================
 
     // clean up and delete the created product
-    const editedProductCard = page.locator('a.product-link', { hasText: 'Updated Product' });
+    const editedProductCard = page.locator('a.product-link', { hasText: newName });
     await editedProductCard.click();
 
     page.on('dialog', async dialog => {
@@ -91,6 +96,8 @@ test.describe("Admin Product Management - End-to-End Create Product Flow", () =>
       page.getByRole('button', { name: /delete product/i }).click()
     ]);
 
-    await expect(page.locator('a.product-link', { hasText: 'Updated Product' })).not.toBeVisible();
+    await expect(page.locator('a.product-link', { hasText: newName })).not.toBeVisible();
   });
+
+
 });
