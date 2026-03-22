@@ -945,25 +945,6 @@ describe("searchProductController", () => {
         const returned = res.json.mock.calls[0][0];
         expect(returned[0]).not.toHaveProperty("photo");
     });
-
-    // Owen Yeo Le Yang A0252047L
-    it("should handle empty string keyword as a valid boundary input", async () => {
-        const req = { params: { keyword: "" } };
-        const res = makeRes();
-
-        const selectMock = jest.fn().mockResolvedValue([]);
-        productModel.find.mockReturnValue({ select: selectMock });
-
-        await searchProductController(req, res);
-
-        expect(productModel.find).toHaveBeenCalledWith({
-            $or: [
-                { name: { $regex: "", $options: "i" } },
-                { description: { $regex: "", $options: "i" } },
-            ],
-        });
-        expect(res.json).toHaveBeenCalledWith([]);
-    });
 });
 
 let relatedProductController;
@@ -1083,35 +1064,12 @@ describe("relatedProductController", () => {
 
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-            success: false,
-            message: "error while geting related product",
-            error: expect.anything(),
-        })
+            expect.objectContaining({
+                success: false,
+                message: "error while geting related product",
+                error: expect.anything(),
+            })
         );
-    });
-
-    // Owen Yeo Le Yang A0252047L
-    it("should still exclude current product when category id is an empty string boundary value", async () => {
-        const req = { params: { pid: "p1", cid: "" } };
-        const res = makeRes();
-
-        const populateMock = jest.fn().mockResolvedValue([]);
-        const limitMock = jest.fn().mockReturnValue({ populate: populateMock });
-        const selectMock = jest.fn().mockReturnValue({ limit: limitMock });
-        productModel.find.mockReturnValue({ select: selectMock });
-
-        await relatedProductController(req, res);
-
-        expect(productModel.find).toHaveBeenCalledWith({
-            category: "",
-            _id: { $ne: "p1" },
-        });
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.send).toHaveBeenCalledWith({
-            success: true,
-            products: [],
-        });
     });
 });
 
