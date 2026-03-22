@@ -1042,7 +1042,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     expect(calledProduct.shipping).toBe(true);
   });
 
-  test("should note update if photo exceeds size limit", async () => {
+  test("should not update if photo exceeds size limit", async () => {
     const { product, category } = await seedProductForUpdate();
 
     const newCategory = await categoryModel.create({
@@ -1085,6 +1085,27 @@ describe("updateProductController Integration Test (with productModel)", () => {
     expect(calledProduct.quantity).toBe(1000);
     expect(calledProduct.shipping).toBe(true);
     expect(calledProduct.photo.data).toBeUndefined();
+  });
+
+  test("should handle non-existent product id", async () => {
+    const req = {
+      params: { pid: new mongoose.Types.ObjectId() },
+      fields: {
+        name: "Test Product",
+        description: "Test product description",
+        price: 200,
+        category: "test-cat",
+        quantity: 2000,
+      },
+      files: {},
+    };
+    const res = mockResponse();
+
+    await updateProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    const responseData = res.send.mock.calls[0][0];
+    expect(responseData.success).toBe(false);
   });
 
   test("should handle invalid product id", async () => {
