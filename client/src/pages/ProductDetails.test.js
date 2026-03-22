@@ -55,7 +55,6 @@ describe("ProductDetails page", () => {
     });
   });
 
-  // Owen Yeo Le Yang A0252047L
   test("loads product by slug and renders product info", async () => {
     axios.get.mockResolvedValueOnce({
       data: {
@@ -158,7 +157,7 @@ describe("ProductDetails page", () => {
 
     expect(toast.success).toHaveBeenCalledWith("Item Added to cart");
   });
-
+  
   // Owen Yeo Le Yang A0252047L
   test("clicking More Details on a related product navigates to its page", async () => {
     axios.get.mockResolvedValueOnce({
@@ -203,7 +202,7 @@ describe("ProductDetails page", () => {
 
     expect(mockNavigate).toHaveBeenCalledWith("/product/iphone-case");
   });
-
+  
   // Owen Yeo Le Yang A0252047L
   test("does not fetch product when slug is missing", async () => {
     mockUseParams.mockReturnValue({});
@@ -218,7 +217,7 @@ describe("ProductDetails page", () => {
       expect(axios.get).not.toHaveBeenCalled();
     });
   });
-
+  
   // Owen Yeo Le Yang A0252047L
   test("handles product API failure gracefully", async () => {
     const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});

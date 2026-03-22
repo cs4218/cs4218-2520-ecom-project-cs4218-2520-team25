@@ -3,14 +3,20 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import slugify from "slugify";
 import productModel from "../models/productModel";
 import categoryModel from "../models/categoryModel";
-import { 
-  createProductController, 
-  deleteProductController, 
-  getProductController, 
-  getSingleProductController, 
+import {
+  createProductController,
+  deleteProductController,
+  getProductController,
+  getSingleProductController,
+  productCountController,
+  productListController,
   productPhotoController,
+  relatedProductController,
+  searchProductController,
   updateProductController
 } from "./productController";
+
+// Daniel Loh, A0252099X
 
 let mongoServer;
 
@@ -19,7 +25,7 @@ beforeAll(async () => {
   const uri = mongoServer.getUri();
   await mongoose.connect(uri);
 
-  jest.spyOn(console, 'log').mockImplementation(() => {}); // silence console.log
+  jest.spyOn(console, 'log').mockImplementation(() => { }); // silence console.log
 });
 
 afterAll(async () => {
@@ -40,6 +46,7 @@ const mockResponse = () => {
   const res = {};
   res.status = jest.fn().mockReturnValue(res);
   res.send = jest.fn().mockReturnValue(res);
+  res.json = jest.fn().mockReturnValue(res);
   res.set = jest.fn().mockReturnValue(res);
   return res;
 }
@@ -166,7 +173,7 @@ describe("createProductController Integration Test (with productModel)", () => {
     const req = {
       fields: {
         name: "No Price Product",
-        description:"Product with no price.",
+        description: "Product with no price.",
         category: "cat1",
         quantity: 1000,
       },
@@ -181,13 +188,13 @@ describe("createProductController Integration Test (with productModel)", () => {
 
     const addedProduct = await productModel.findOne({ name: "No Price Product" });
     expect(addedProduct).toBeNull();
-  }); 
+  });
 
   test("should not create if category is missing", async () => {
     const req = {
       fields: {
         name: "No Category Product",
-        description:"Product with no category.",
+        description: "Product with no category.",
         price: 100,
         quantity: 1000,
       },
@@ -200,15 +207,15 @@ describe("createProductController Integration Test (with productModel)", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.send.mock.calls[0][0].error).toBe("Category is Required");
 
-    const addedProduct = await productModel.findOne({  name: "No Category Product" });
+    const addedProduct = await productModel.findOne({ name: "No Category Product" });
     expect(addedProduct).toBeNull();
-  }); 
+  });
 
   test("should not create if quantity is missing", async () => {
     const req = {
       fields: {
         name: "No Quantity Product",
-        description:"Product with no quantity.",
+        description: "Product with no quantity.",
         category: "cat1",
         price: 100,
       },
@@ -221,15 +228,15 @@ describe("createProductController Integration Test (with productModel)", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.send.mock.calls[0][0].error).toBe("Quantity is Required");
 
-    const addedProduct = await productModel.findOne({  name: "No Quantity Product" });
+    const addedProduct = await productModel.findOne({ name: "No Quantity Product" });
     expect(addedProduct).toBeNull();
-  }); 
+  });
 
   test("should not create if photo exceeds size limit", async () => {
     const req = {
       fields: {
         name: "Large Photo Size Product",
-        description:"Product with overly large photo size.",
+        description: "Product with overly large photo size.",
         category: "cat1",
         price: 100,
         quantity: 1000,
@@ -249,7 +256,7 @@ describe("createProductController Integration Test (with productModel)", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.send.mock.calls[0][0].error).toBe("photo is Required and should be less then 1mb");
 
-    const addedProduct = await productModel.findOne({  name: "Large Photo Size Product" });
+    const addedProduct = await productModel.findOne({ name: "Large Photo Size Product" });
     expect(addedProduct).toBeNull();
   });
 
@@ -303,7 +310,7 @@ describe("getProductController Integration Test (with productModel)", () => {
         category: category._id,
         quantity: 2000,
         shipping: false,
-      }, 
+      },
     ];
     await productModel.create(products[0]);
     await productModel.create(products[1]);
@@ -350,7 +357,7 @@ describe("getProductController Integration Test (with productModel)", () => {
       name: "Electronics",
       slug: "electronics",
     });
-    
+
     for (let i = 0; i < 15; i++) {
       await productModel.create({
         name: `Product ${i}`,
@@ -394,7 +401,7 @@ describe("getProductController Integration Test (with productModel)", () => {
         category: category._id,
         quantity: 2000,
         shipping: false,
-      }, 
+      },
     ];
 
     const now = new Date();
@@ -786,7 +793,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -824,7 +831,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -862,7 +869,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -899,7 +906,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -936,7 +943,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -1006,7 +1013,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -1043,7 +1050,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -1127,6 +1134,298 @@ describe("updateProductController Integration Test (with productModel)", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     const responseData = res.send.mock.calls[0][0];
     expect(responseData.success).toBe(false);
+
+    await mongoose.connect(mongoServer.getUri());
+  });
+});
+
+describe("searchProductController Integration Test (with productModel)", () => {
+  // Owen Yeo Le Yang A0252047L
+  test("should return products that match keyword in name or description", async () => {
+    const category = await categoryModel.create({
+      name: "Search Category",
+      slug: "search-category",
+    });
+
+    await productModel.create([
+      {
+        name: "Alpha Phone",
+        slug: "alpha-phone",
+        description: "Flagship device",
+        price: 1000,
+        category: category._id,
+        quantity: 10,
+      },
+      {
+        name: "Travel Bag",
+        slug: "travel-bag",
+        description: "Perfect for alpha travellers",
+        price: 80,
+        category: category._id,
+        quantity: 30,
+      },
+      {
+        name: "Desk Lamp",
+        slug: "desk-lamp",
+        description: "Warm lighting",
+        price: 40,
+        category: category._id,
+        quantity: 15,
+      },
+    ]);
+
+    const req = { params: { keyword: "alpha" } };
+    const res = mockResponse();
+
+    await searchProductController(req, res);
+
+    expect(res.json).toHaveBeenCalledTimes(1);
+    const results = res.json.mock.calls[0][0];
+    expect(results).toHaveLength(2);
+    expect(results.map((p) => p.name)).toEqual(
+      expect.arrayContaining(["Alpha Phone", "Travel Bag"])
+    );
+    expect(Object.keys(results[0])).not.toContain("photo");
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("should handle database errors", async () => {
+    await mongoose.disconnect();
+
+    const req = { params: { keyword: "alpha" } };
+    const res = mockResponse();
+
+    await searchProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+    expect(data.message).toBe("Error In Search Product API");
+
+    await mongoose.connect(mongoServer.getUri());
+  });
+});
+
+describe("relatedProductController Integration Test (with productModel)", () => {
+  // Owen Yeo Le Yang A0252047L
+  test("should return at most 3 related products in same category excluding current product", async () => {
+    const sameCategory = await categoryModel.create({
+      name: "Phones",
+      slug: "phones",
+    });
+    const otherCategory = await categoryModel.create({
+      name: "Laptops",
+      slug: "laptops",
+    });
+
+    const current = await productModel.create({
+      name: "Main Phone",
+      slug: "main-phone",
+      description: "current product",
+      price: 1000,
+      category: sameCategory._id,
+      quantity: 9,
+    });
+
+    await productModel.create([
+      {
+        name: "Phone 1",
+        slug: "phone-1",
+        description: "related 1",
+        price: 800,
+        category: sameCategory._id,
+        quantity: 5,
+      },
+      {
+        name: "Phone 2",
+        slug: "phone-2",
+        description: "related 2",
+        price: 850,
+        category: sameCategory._id,
+        quantity: 5,
+      },
+      {
+        name: "Phone 3",
+        slug: "phone-3",
+        description: "related 3",
+        price: 900,
+        category: sameCategory._id,
+        quantity: 5,
+      },
+      {
+        name: "Phone 4",
+        slug: "phone-4",
+        description: "related 4",
+        price: 950,
+        category: sameCategory._id,
+        quantity: 5,
+      },
+      {
+        name: "Laptop 1",
+        slug: "laptop-1",
+        description: "other category",
+        price: 1200,
+        category: otherCategory._id,
+        quantity: 7,
+      },
+    ]);
+
+    const req = {
+      params: {
+        pid: current._id.toString(),
+        cid: sameCategory._id.toString(),
+      },
+    };
+    const res = mockResponse();
+
+    await relatedProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(true);
+    expect(data.products).toHaveLength(3);
+    data.products.forEach((product) => {
+      expect(product._id.toString()).not.toBe(current._id.toString());
+      expect(product.category.name).toBe("Phones");
+      expect(Object.keys(product.toObject())).not.toContain("photo");
+    });
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("should handle invalid object id params", async () => {
+    const req = {
+      params: {
+        pid: "invalid-pid",
+        cid: "invalid-cid",
+      },
+    };
+    const res = mockResponse();
+
+    await relatedProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+    expect(data.message).toBe("error while geting related product");
+  });
+});
+
+describe("productListController Integration Test (with productModel)", () => {
+  // Owen Yeo Le Yang A0252047L
+  test("should return paginated products with 6 items on page 1 and remaining on page 2", async () => {
+    const category = await categoryModel.create({
+      name: "Paged Category",
+      slug: "paged-category",
+    });
+
+    for (let i = 1; i <= 8; i++) {
+      await productModel.create({
+        name: `Paged Product ${i}`,
+        slug: `paged-product-${i}`,
+        description: `Paged description ${i}`,
+        price: i * 10,
+        category: category._id,
+        quantity: i,
+        photo: {
+          data: Buffer.from(`photo-${i}`),
+          contentType: "image/png",
+        },
+      });
+    }
+
+    const resPage1 = mockResponse();
+    await productListController({ params: { page: 1 } }, resPage1);
+    const page1Data = resPage1.send.mock.calls[0][0];
+
+    const resPage2 = mockResponse();
+    await productListController({ params: { page: 2 } }, resPage2);
+    const page2Data = resPage2.send.mock.calls[0][0];
+
+    expect(resPage1.status).toHaveBeenCalledWith(200);
+    expect(page1Data.success).toBe(true);
+    expect(page1Data.products).toHaveLength(6);
+
+    expect(resPage2.status).toHaveBeenCalledWith(200);
+    expect(page2Data.success).toBe(true);
+    expect(page2Data.products).toHaveLength(2);
+    page1Data.products.forEach((product) => {
+      expect(Object.keys(product.toObject())).not.toContain("photo");
+    });
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("should handle database errors", async () => {
+    await mongoose.disconnect();
+
+    const req = { params: { page: 1 } };
+    const res = mockResponse();
+
+    await productListController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+    expect(data.message).toBe("error in per page ctrl");
+
+    await mongoose.connect(mongoServer.getUri());
+  });
+});
+
+describe("productCountController Integration Test (with productModel)", () => {
+  // Owen Yeo Le Yang A0252047L
+  test("should return total product count", async () => {
+    const category = await categoryModel.create({
+      name: "Count Category",
+      slug: "count-category",
+    });
+
+    await productModel.create([
+      {
+        name: "Count Product 1",
+        slug: "count-product-1",
+        description: "count product 1",
+        price: 20,
+        category: category._id,
+        quantity: 1,
+      },
+      {
+        name: "Count Product 2",
+        slug: "count-product-2",
+        description: "count product 2",
+        price: 30,
+        category: category._id,
+        quantity: 2,
+      },
+      {
+        name: "Count Product 3",
+        slug: "count-product-3",
+        description: "count product 3",
+        price: 40,
+        category: category._id,
+        quantity: 3,
+      },
+    ]);
+
+    const res = mockResponse();
+    await productCountController({}, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(true);
+    expect(data.total).toBe(3);
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("should handle database errors", async () => {
+    await mongoose.disconnect();
+
+    const res = mockResponse();
+    await productCountController({}, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+    expect(data.message).toBe("Error in product count");
 
     await mongoose.connect(mongoServer.getUri());
   });
