@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+// Daniel Loh, A0252099X
+
 // Helper: log in as admin and open the Create Category page
 async function loginAndOpenCreateCategory(page) {
   await page.goto(`/`);
