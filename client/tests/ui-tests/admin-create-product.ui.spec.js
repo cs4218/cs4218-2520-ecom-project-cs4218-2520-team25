@@ -343,4 +343,14 @@ test.describe("Admin Product Management - End-to-End CRUD Product Flow", () => {
 
     await expect(page.locator('a.product-link', { hasText: PRODUCT_NAME })).not.toBeVisible();
   });
+
+  test("admin should be redirected to login page if not logged in as admin", async ({ page }) => {
+    // clear auth in local storage
+    await page.addInitScript(() => localStorage.clear());
+
+    await page.goto("http://localhost:3000/dashboard/admin/create-product");
+
+    await page.waitForURL("**/login");
+    await expect(page).toHaveURL(/login/);
+  });
 });
