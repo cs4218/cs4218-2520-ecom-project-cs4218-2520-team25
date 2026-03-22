@@ -17,7 +17,7 @@ module.exports = defineConfig({
   },
   webServer: [
     {
-      command: "npm run client",
+      command: "npm run dev",
       port: 3000,
       reuseExistingServer: true,
     },
