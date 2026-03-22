@@ -105,7 +105,7 @@ describe("Auth Middleware Integration Tests", () => {
     // 1. Arrange - Seed a Regular User
     const regularUser = await new userModel({
       name: "User",
-      email: "user78@test.com",
+      email: "user79@test.com",
       password: "hash",
       phone: "123",
       address: "Home",
