@@ -525,7 +525,7 @@ test.describe("Search E2E tests", () => {
     await page.getByRole("button", { name: /^search$/i }).click();
 
     await expect(page).toHaveURL(/\/search$/);
-    await expect(page.getByRole("heading", { name: /search resuts/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /search results/i })).toBeVisible();
     await expect(page.getByText(/Found\s+\d+/i)).toBeVisible();
     await expect(page.getByText("No Products Found")).not.toBeVisible();
     await expect(page.getByText(expectedResultName, { exact: false }).first()).toBeVisible();
