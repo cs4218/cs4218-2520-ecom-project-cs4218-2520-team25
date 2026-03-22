@@ -1,4 +1,5 @@
-import { loginController, registerController, forgotPasswordController, updateProfileController } from "../controllers/authController";
+// Kailashwaran, A0253385Y; Entire file
+import { loginController, registerController, forgotPasswordController, updateProfileController } from "./authController";
 import userModel from "../models/userModel";
 import { hashPassword } from "../helpers/authHelper";
 import mongoose from "mongoose";
@@ -10,7 +11,7 @@ describe("Login Controller Integration Tests", () => {
   beforeAll(async () => {
     const url = process.env.MONGO_URL 
     await mongoose.connect(url);
-  });
+  });3  
   
   // Clean up the database state after each test to ensure isolation
   let createdUserIds = [];
