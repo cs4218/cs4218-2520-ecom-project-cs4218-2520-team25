@@ -93,7 +93,6 @@ test.describe("Create Product Page UI Integration", () => {
       res.url().includes("/api/v1/product/create-product") && res.status() === 201
     );
 
-    //await page.waitForURL("**/admin/products")
     await expect(page).toHaveURL(/\/admin\/products/);
   });
 })
