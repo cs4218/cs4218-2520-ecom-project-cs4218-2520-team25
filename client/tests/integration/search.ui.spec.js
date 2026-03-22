@@ -370,10 +370,6 @@ test.describe("Search E2E tests", () => {
     await page.goto("/");
 
     const firstProductTitle = page.locator(".card .card-title").first();
-    if ((await firstProductTitle.count()) === 0) {
-      test.skip(true, "No products are available in the database.");
-    }
-
     const firstProductName = (await firstProductTitle.textContent())?.trim();
     const searchKeyword = firstProductName ? firstProductName.split(/\s+/)[0] : "";
     if (!searchKeyword) {
@@ -408,9 +404,6 @@ test.describe("Search E2E tests", () => {
     await page.goto("/");
 
     const firstProductTitle = page.locator(".card .card-title").first();
-    if ((await firstProductTitle.count()) === 0) {
-      test.skip(true, "No products are available in the database.");
-    }
 
     const firstProductName = (await firstProductTitle.textContent())?.trim();
     const searchKeyword = firstProductName ? firstProductName.split(/\s+/)[0] : "";
@@ -438,9 +431,6 @@ test.describe("Search E2E tests", () => {
     await page.goto("/");
 
     const firstProductTitle = page.locator(".card .card-title").first();
-    if ((await firstProductTitle.count()) === 0) {
-      test.skip(true, "No products are available in the database.");
-    }
 
     const firstProductName = (await firstProductTitle.textContent())?.trim();
     const searchKeyword = firstProductName ? firstProductName.split(/\s+/)[0] : "";
