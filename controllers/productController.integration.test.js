@@ -3,11 +3,11 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import slugify from "slugify";
 import productModel from "../models/productModel";
 import categoryModel from "../models/categoryModel";
-import { 
-  createProductController, 
-  deleteProductController, 
-  getProductController, 
-  getSingleProductController, 
+import {
+  createProductController,
+  deleteProductController,
+  getProductController,
+  getSingleProductController,
   productCountController,
   productListController,
   productPhotoController,
@@ -16,6 +16,8 @@ import {
   updateProductController
 } from "./productController";
 
+// Daniel Loh, A0252099X
+
 let mongoServer;
 
 beforeAll(async () => {
@@ -23,7 +25,7 @@ beforeAll(async () => {
   const uri = mongoServer.getUri();
   await mongoose.connect(uri);
 
-  jest.spyOn(console, 'log').mockImplementation(() => {}); // silence console.log
+  jest.spyOn(console, 'log').mockImplementation(() => { }); // silence console.log
 });
 
 afterAll(async () => {
@@ -171,7 +173,7 @@ describe("createProductController Integration Test (with productModel)", () => {
     const req = {
       fields: {
         name: "No Price Product",
-        description:"Product with no price.",
+        description: "Product with no price.",
         category: "cat1",
         quantity: 1000,
       },
@@ -186,13 +188,13 @@ describe("createProductController Integration Test (with productModel)", () => {
 
     const addedProduct = await productModel.findOne({ name: "No Price Product" });
     expect(addedProduct).toBeNull();
-  }); 
+  });
 
   test("should not create if category is missing", async () => {
     const req = {
       fields: {
         name: "No Category Product",
-        description:"Product with no category.",
+        description: "Product with no category.",
         price: 100,
         quantity: 1000,
       },
@@ -205,15 +207,15 @@ describe("createProductController Integration Test (with productModel)", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.send.mock.calls[0][0].error).toBe("Category is Required");
 
-    const addedProduct = await productModel.findOne({  name: "No Category Product" });
+    const addedProduct = await productModel.findOne({ name: "No Category Product" });
     expect(addedProduct).toBeNull();
-  }); 
+  });
 
   test("should not create if quantity is missing", async () => {
     const req = {
       fields: {
         name: "No Quantity Product",
-        description:"Product with no quantity.",
+        description: "Product with no quantity.",
         category: "cat1",
         price: 100,
       },
@@ -226,15 +228,15 @@ describe("createProductController Integration Test (with productModel)", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.send.mock.calls[0][0].error).toBe("Quantity is Required");
 
-    const addedProduct = await productModel.findOne({  name: "No Quantity Product" });
+    const addedProduct = await productModel.findOne({ name: "No Quantity Product" });
     expect(addedProduct).toBeNull();
-  }); 
+  });
 
   test("should not create if photo exceeds size limit", async () => {
     const req = {
       fields: {
         name: "Large Photo Size Product",
-        description:"Product with overly large photo size.",
+        description: "Product with overly large photo size.",
         category: "cat1",
         price: 100,
         quantity: 1000,
@@ -254,7 +256,7 @@ describe("createProductController Integration Test (with productModel)", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.send.mock.calls[0][0].error).toBe("photo is Required and should be less then 1mb");
 
-    const addedProduct = await productModel.findOne({  name: "Large Photo Size Product" });
+    const addedProduct = await productModel.findOne({ name: "Large Photo Size Product" });
     expect(addedProduct).toBeNull();
   });
 
@@ -308,7 +310,7 @@ describe("getProductController Integration Test (with productModel)", () => {
         category: category._id,
         quantity: 2000,
         shipping: false,
-      }, 
+      },
     ];
     await productModel.create(products[0]);
     await productModel.create(products[1]);
@@ -355,7 +357,7 @@ describe("getProductController Integration Test (with productModel)", () => {
       name: "Electronics",
       slug: "electronics",
     });
-    
+
     for (let i = 0; i < 15; i++) {
       await productModel.create({
         name: `Product ${i}`,
@@ -399,7 +401,7 @@ describe("getProductController Integration Test (with productModel)", () => {
         category: category._id,
         quantity: 2000,
         shipping: false,
-      }, 
+      },
     ];
 
     const now = new Date();
@@ -791,7 +793,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -829,7 +831,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -867,7 +869,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -904,7 +906,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -941,7 +943,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -1011,7 +1013,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
@@ -1048,7 +1050,7 @@ describe("updateProductController Integration Test (with productModel)", () => {
     const newCategory = await categoryModel.create({
       name: "New Category",
       slug: "new-category",
-    }); 
+    });
     const req = {
       params: { pid: product._id },
       fields: {
