@@ -118,4 +118,28 @@ test.describe("Update Product Page UI Integration", () => {
     );
     await expect(page).toHaveURL(/\/admin\/products/);
   });
+
+  test("admin can delete product via the API", async ({ page }) => {
+    await page.route(`**/api/v1/product/delete-product/${PRODUCT_ID}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ success: true }),
+      });
+    });
+
+    // navigate to update product page
+    await page.goto(`/dashboard/admin/product/${PRODUCT_SLUG}`);
+    await expect(page.getByRole("heading", { name: "Update Product" })).toBeVisible();
+
+    page.on('dialog', async dialog => {
+      await dialog.accept();
+    });
+    await page.getByRole('button', { name: /delete product/i }).click()
+
+    await page.waitForResponse(res => 
+      res.url().includes(`/api/v1/product/delete-product/${PRODUCT_ID}`) && res.status() === 200
+    );
+    await expect(page).toHaveURL(/\/admin\/products/);
+  });
 });
