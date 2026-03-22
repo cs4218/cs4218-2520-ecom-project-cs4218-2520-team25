@@ -3,6 +3,8 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { spawn } from "child_process";
 import connectDB from "./db.js";
 
+// Daniel Loh. A0252099X
+
 jest.setTimeout(20000);
 
 describe("Database and Server Integration", () => {
