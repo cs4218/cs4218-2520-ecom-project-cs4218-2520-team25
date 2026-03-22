@@ -52,6 +52,7 @@ test.describe("Admin Product Management - End-to-End CRUD Product Flow", () => {
     await page.getByRole("button", { name: /create product/i }).click();
 
     await page.waitForURL("**/dashboard/admin/products");
+    await page.reload();
 
     await expect(page.getByRole('heading', { name: productName })).toBeVisible();
 
