@@ -1,14 +1,29 @@
-const { defineConfig } = require("@playwright/test");
+const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
-  testDir: "./client/tests",
+  testDir: './client/tests',
+  timeout: 15_000,
+  expect: {
+    timeout: 15_000,
+  },
+  reporter: [['html'], ['list']],
   use: {
     baseURL: "http://localhost:3000",
     headless: true,
+    actionTimeout: 0,
+    trace: 'on-first-retry',
   },
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+      },
+    },
+  ],
   webServer: [
     {
-      command: "npm run client",
+      command: 'npm run client',
       port: 3000,
       reuseExistingServer: true,
     },
