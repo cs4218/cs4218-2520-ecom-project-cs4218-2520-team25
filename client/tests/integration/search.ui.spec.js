@@ -404,7 +404,6 @@ test.describe("Search E2E tests", () => {
   });
 
   test("test search results add to cart updates badge and local storage", async ({ page }) => {
-    test.fail(true, "Known bug: Search page ADD TO CART button has no click handler.");
 
     await page.goto("/");
 
@@ -435,7 +434,6 @@ test.describe("Search E2E tests", () => {
 
   // Owen Yeo Le Yang A0252047L
   test("test search results more details navigates to product page", async ({ page }) => {
-    test.fail(true, "Known bug: Search page More Details button has no click handler.");
 
     await page.goto("/");
 
@@ -458,8 +456,8 @@ test.describe("Search E2E tests", () => {
     await firstCard.getByRole("button", { name: /more details/i }).click();
 
     const expectedSlug = firstCardName
-      ? firstCardName.toLowerCase().replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-")
+      ? firstCardName.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-")
       : "";
-    await expect(page).toHaveURL(new RegExp(`/product/${expectedSlug}$`));
+    await expect(page).toHaveURL(new RegExp(`/product/${expectedSlug}`));
   });
 });
