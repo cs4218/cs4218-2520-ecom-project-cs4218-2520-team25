@@ -8,7 +8,11 @@ import {
   deleteProductController, 
   getProductController, 
   getSingleProductController, 
+  productCountController,
+  productListController,
   productPhotoController,
+  relatedProductController,
+  searchProductController,
   updateProductController
 } from "./productController";
 
@@ -40,6 +44,7 @@ const mockResponse = () => {
   const res = {};
   res.status = jest.fn().mockReturnValue(res);
   res.send = jest.fn().mockReturnValue(res);
+  res.json = jest.fn().mockReturnValue(res);
   res.set = jest.fn().mockReturnValue(res);
   return res;
 }
@@ -1127,6 +1132,298 @@ describe("updateProductController Integration Test (with productModel)", () => {
     expect(res.status).toHaveBeenCalledWith(500);
     const responseData = res.send.mock.calls[0][0];
     expect(responseData.success).toBe(false);
+
+    await mongoose.connect(mongoServer.getUri());
+  });
+});
+
+describe("searchProductController Integration Test (with productModel)", () => {
+  // Owen Yeo Le Yang A0252047L
+  test("should return products that match keyword in name or description", async () => {
+    const category = await categoryModel.create({
+      name: "Search Category",
+      slug: "search-category",
+    });
+
+    await productModel.create([
+      {
+        name: "Alpha Phone",
+        slug: "alpha-phone",
+        description: "Flagship device",
+        price: 1000,
+        category: category._id,
+        quantity: 10,
+      },
+      {
+        name: "Travel Bag",
+        slug: "travel-bag",
+        description: "Perfect for alpha travellers",
+        price: 80,
+        category: category._id,
+        quantity: 30,
+      },
+      {
+        name: "Desk Lamp",
+        slug: "desk-lamp",
+        description: "Warm lighting",
+        price: 40,
+        category: category._id,
+        quantity: 15,
+      },
+    ]);
+
+    const req = { params: { keyword: "alpha" } };
+    const res = mockResponse();
+
+    await searchProductController(req, res);
+
+    expect(res.json).toHaveBeenCalledTimes(1);
+    const results = res.json.mock.calls[0][0];
+    expect(results).toHaveLength(2);
+    expect(results.map((p) => p.name)).toEqual(
+      expect.arrayContaining(["Alpha Phone", "Travel Bag"])
+    );
+    expect(Object.keys(results[0])).not.toContain("photo");
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("should handle database errors", async () => {
+    await mongoose.disconnect();
+
+    const req = { params: { keyword: "alpha" } };
+    const res = mockResponse();
+
+    await searchProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+    expect(data.message).toBe("Error In Search Product API");
+
+    await mongoose.connect(mongoServer.getUri());
+  });
+});
+
+describe("relatedProductController Integration Test (with productModel)", () => {
+  // Owen Yeo Le Yang A0252047L
+  test("should return at most 3 related products in same category excluding current product", async () => {
+    const sameCategory = await categoryModel.create({
+      name: "Phones",
+      slug: "phones",
+    });
+    const otherCategory = await categoryModel.create({
+      name: "Laptops",
+      slug: "laptops",
+    });
+
+    const current = await productModel.create({
+      name: "Main Phone",
+      slug: "main-phone",
+      description: "current product",
+      price: 1000,
+      category: sameCategory._id,
+      quantity: 9,
+    });
+
+    await productModel.create([
+      {
+        name: "Phone 1",
+        slug: "phone-1",
+        description: "related 1",
+        price: 800,
+        category: sameCategory._id,
+        quantity: 5,
+      },
+      {
+        name: "Phone 2",
+        slug: "phone-2",
+        description: "related 2",
+        price: 850,
+        category: sameCategory._id,
+        quantity: 5,
+      },
+      {
+        name: "Phone 3",
+        slug: "phone-3",
+        description: "related 3",
+        price: 900,
+        category: sameCategory._id,
+        quantity: 5,
+      },
+      {
+        name: "Phone 4",
+        slug: "phone-4",
+        description: "related 4",
+        price: 950,
+        category: sameCategory._id,
+        quantity: 5,
+      },
+      {
+        name: "Laptop 1",
+        slug: "laptop-1",
+        description: "other category",
+        price: 1200,
+        category: otherCategory._id,
+        quantity: 7,
+      },
+    ]);
+
+    const req = {
+      params: {
+        pid: current._id.toString(),
+        cid: sameCategory._id.toString(),
+      },
+    };
+    const res = mockResponse();
+
+    await relatedProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(true);
+    expect(data.products).toHaveLength(3);
+    data.products.forEach((product) => {
+      expect(product._id.toString()).not.toBe(current._id.toString());
+      expect(product.category.name).toBe("Phones");
+      expect(Object.keys(product.toObject())).not.toContain("photo");
+    });
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("should handle invalid object id params", async () => {
+    const req = {
+      params: {
+        pid: "invalid-pid",
+        cid: "invalid-cid",
+      },
+    };
+    const res = mockResponse();
+
+    await relatedProductController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+    expect(data.message).toBe("error while geting related product");
+  });
+});
+
+describe("productListController Integration Test (with productModel)", () => {
+  // Owen Yeo Le Yang A0252047L
+  test("should return paginated products with 6 items on page 1 and remaining on page 2", async () => {
+    const category = await categoryModel.create({
+      name: "Paged Category",
+      slug: "paged-category",
+    });
+
+    for (let i = 1; i <= 8; i++) {
+      await productModel.create({
+        name: `Paged Product ${i}`,
+        slug: `paged-product-${i}`,
+        description: `Paged description ${i}`,
+        price: i * 10,
+        category: category._id,
+        quantity: i,
+        photo: {
+          data: Buffer.from(`photo-${i}`),
+          contentType: "image/png",
+        },
+      });
+    }
+
+    const resPage1 = mockResponse();
+    await productListController({ params: { page: 1 } }, resPage1);
+    const page1Data = resPage1.send.mock.calls[0][0];
+
+    const resPage2 = mockResponse();
+    await productListController({ params: { page: 2 } }, resPage2);
+    const page2Data = resPage2.send.mock.calls[0][0];
+
+    expect(resPage1.status).toHaveBeenCalledWith(200);
+    expect(page1Data.success).toBe(true);
+    expect(page1Data.products).toHaveLength(6);
+
+    expect(resPage2.status).toHaveBeenCalledWith(200);
+    expect(page2Data.success).toBe(true);
+    expect(page2Data.products).toHaveLength(2);
+    page1Data.products.forEach((product) => {
+      expect(Object.keys(product.toObject())).not.toContain("photo");
+    });
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("should handle database errors", async () => {
+    await mongoose.disconnect();
+
+    const req = { params: { page: 1 } };
+    const res = mockResponse();
+
+    await productListController(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+    expect(data.message).toBe("error in per page ctrl");
+
+    await mongoose.connect(mongoServer.getUri());
+  });
+});
+
+describe("productCountController Integration Test (with productModel)", () => {
+  // Owen Yeo Le Yang A0252047L
+  test("should return total product count", async () => {
+    const category = await categoryModel.create({
+      name: "Count Category",
+      slug: "count-category",
+    });
+
+    await productModel.create([
+      {
+        name: "Count Product 1",
+        slug: "count-product-1",
+        description: "count product 1",
+        price: 20,
+        category: category._id,
+        quantity: 1,
+      },
+      {
+        name: "Count Product 2",
+        slug: "count-product-2",
+        description: "count product 2",
+        price: 30,
+        category: category._id,
+        quantity: 2,
+      },
+      {
+        name: "Count Product 3",
+        slug: "count-product-3",
+        description: "count product 3",
+        price: 40,
+        category: category._id,
+        quantity: 3,
+      },
+    ]);
+
+    const res = mockResponse();
+    await productCountController({}, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(true);
+    expect(data.total).toBe(3);
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("should handle database errors", async () => {
+    await mongoose.disconnect();
+
+    const res = mockResponse();
+    await productCountController({}, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    const data = res.send.mock.calls[0][0];
+    expect(data.success).toBe(false);
+    expect(data.message).toBe("Error in product count");
 
     await mongoose.connect(mongoServer.getUri());
   });
