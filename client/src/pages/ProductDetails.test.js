@@ -7,20 +7,20 @@ import ProductDetails from "./ProductDetails";
 
 // A0221684E Han Tae Won
 
-// mock Layout
 jest.mock("./../components/Layout", () => ({ children }) => (
   <div data-testid="layout">{children}</div>
 ));
 
 const mockNavigate = jest.fn();
 const mockSetCart = jest.fn();
+const mockUseParams = jest.fn();
 let mockCart = [];
 
 jest.mock("react-router-dom", () => {
   const actual = jest.requireActual("react-router-dom");
   return {
     ...actual,
-    useParams: () => ({ slug: "iphone-15" }),
+    useParams: () => mockUseParams(),
     useNavigate: () => mockNavigate,
   };
 });
@@ -41,6 +41,7 @@ describe("ProductDetails page", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockCart = [];
+    mockUseParams.mockReturnValue({ slug: "iphone-15" });
 
     setItemMock = jest.fn();
     Object.defineProperty(window, "localStorage", {
@@ -54,6 +55,7 @@ describe("ProductDetails page", () => {
     });
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("loads product by slug and renders product info", async () => {
     axios.get.mockResolvedValueOnce({
       data: {
@@ -94,8 +96,12 @@ describe("ProductDetails page", () => {
       )
     );
 
-    expect(await screen.findByText(/Name\s*:\s*iPhone 15/i)).toBeInTheDocument();
-    expect(screen.getByText(/Description\s*:\s*New iPhone/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Name\s*:\s*iPhone 15/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Description\s*:\s*New iPhone/i)
+    ).toBeInTheDocument();
     expect(screen.getByText(/Price\s*:\s*\$1,234\.00/i)).toBeInTheDocument();
     expect(screen.getByText(/Category\s*:\s*Phones/i)).toBeInTheDocument();
     expect(screen.getByText("Similar Products ➡️")).toBeInTheDocument();
@@ -153,6 +159,7 @@ describe("ProductDetails page", () => {
     expect(toast.success).toHaveBeenCalledWith("Item Added to cart");
   });
 
+  // Owen Yeo Le Yang A0252047L
   test("clicking More Details on a related product navigates to its page", async () => {
     axios.get.mockResolvedValueOnce({
       data: {
@@ -189,9 +196,45 @@ describe("ProductDetails page", () => {
 
     await screen.findByText("iPhone Case");
 
-    const moreDetailsBtn = screen.getByRole("button", { name: /more details/i });
+    const moreDetailsBtn = screen.getByRole("button", {
+      name: /more details/i,
+    });
     fireEvent.click(moreDetailsBtn);
 
     expect(mockNavigate).toHaveBeenCalledWith("/product/iphone-case");
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("does not fetch product when slug is missing", async () => {
+    mockUseParams.mockReturnValue({});
+
+    render(
+      <MemoryRouter>
+        <ProductDetails />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(axios.get).not.toHaveBeenCalled();
+    });
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("handles product API failure gracefully", async () => {
+    const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    axios.get.mockRejectedValueOnce(new Error("failed to fetch product"));
+
+    render(
+      <MemoryRouter>
+        <ProductDetails />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalled();
+      expect(screen.getByText("Product Details")).toBeInTheDocument();
+    });
+
+    consoleSpy.mockRestore();
   });
 });
