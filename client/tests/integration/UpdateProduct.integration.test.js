@@ -72,6 +72,14 @@ test.describe("Update Product Page UI Integration", () => {
         }),
       });
     });
+
+    await page.route(`/api/v1/product/product-photo/${PRODUCT_ID}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "image/png",
+        body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAUA...", "base64"),
+      });
+    });
   });
 
   test("admin can update product information via the API", async ({ page }) => {
@@ -93,6 +101,11 @@ test.describe("Update Product Page UI Integration", () => {
     // verify get-product
     await expect(page.getByText(PRODUCT_NAME)).toBeVisible();
     await expect(page.getByText(PRODUCT_DESC)).toBeVisible();
+
+    // verify product-photo
+    const productPhoto = page.locator('img[alt="product_photo"]');
+    await expect(productPhoto).toBeVisible();
+    await expect(productPhoto).toHaveAttribute('src', new RegExp(`${PRODUCT_ID}`));
 
     // verify get-category
     const categoryDropdown = page.locator('.ant-select').first();
