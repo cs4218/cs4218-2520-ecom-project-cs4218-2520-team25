@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 
+// Kailashwaran, A0253385Y; Entire file
 test.describe('Login Flow: Login -> Home', () => {
 
   const BASE_URL = 'http://localhost:3000';
@@ -52,7 +53,7 @@ test.describe('Login Flow: Login -> Home', () => {
    */
   test('should_prevent_access_and_show_error_with_wrong_credentials', async ({ page }) => {
     // --- Arrange ---
-await page.goto(`${BASE_URL}/login`);
+    await page.goto(`${BASE_URL}/login`);
 
     // --- Act ---
     // Fill in credentials that do not exist in your real database

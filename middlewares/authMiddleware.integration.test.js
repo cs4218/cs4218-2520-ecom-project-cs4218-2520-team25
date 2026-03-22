@@ -1,4 +1,6 @@
-import { requireSignIn, isAdmin } from "../middlewares/authMiddleware";
+// Kailashwaran, A0253385Y
+
+import { requireSignIn, isAdmin } from "./authMiddleware";
 import userModel from "../models/userModel";
 import JWT from "jsonwebtoken";
 import mongoose from "mongoose";
