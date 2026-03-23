@@ -3,8 +3,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Search from "./Search";
 import { SearchProvider, useSearch } from "../context/search";
+import { CartProvider } from "../context/cart";
 
 jest.unmock("../context/search");
+jest.unmock("../context/cart");
 
 const SearchSeeder = () => {
   const [, setSearch] = useSearch();
@@ -41,9 +43,11 @@ describe("Search page integration (SearchContext)", () => {
   test("renders empty state with default search context values", () => {
     render(
       <MemoryRouter>
-        <SearchProvider>
-          <Search />
-        </SearchProvider>
+        <CartProvider>
+          <SearchProvider>
+            <Search />
+          </SearchProvider>
+        </CartProvider>
       </MemoryRouter>
     );
 
@@ -55,10 +59,12 @@ describe("Search page integration (SearchContext)", () => {
   test("renders results when shared search context is updated", () => {
     render(
       <MemoryRouter>
-        <SearchProvider>
-          <SearchSeeder />
-          <Search />
-        </SearchProvider>
+        <CartProvider>
+          <SearchProvider>
+            <SearchSeeder />
+            <Search />
+          </SearchProvider>
+        </CartProvider>
       </MemoryRouter>
     );
 
@@ -70,4 +76,3 @@ describe("Search page integration (SearchContext)", () => {
     expect(screen.getAllByRole("button", { name: /add to cart/i })).toHaveLength(2);
   });
 });
-
