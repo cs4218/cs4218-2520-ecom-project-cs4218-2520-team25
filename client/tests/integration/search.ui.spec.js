@@ -1,4 +1,29 @@
 const { test, expect } = require("@playwright/test");
+const path = require("path");
+const dotenv = require("dotenv");
+const fs = require("fs");
+const { MongoClient, ObjectId } = require("mongodb");
+
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+
+const resolveMongoUrl = () => {
+  const fromEnv = process.env.MONGO_URL?.trim();
+  if (fromEnv && /^(mongodb|mongodb\+srv):\/\//.test(fromEnv)) return fromEnv;
+
+  try {
+    const envRaw = fs.readFileSync(path.resolve(process.cwd(), ".env"), "utf8");
+    const line = envRaw
+      .split(/\r?\n/)
+      .find((l) => /^\s*MONGO_URL\s*=/.test(l));
+    if (!line) return null;
+    const value = line.split("=").slice(1).join("=").trim().replace(/^['"]|['"]$/g, "");
+    if (/^(mongodb|mongodb\+srv):\/\//.test(value)) return value;
+  } catch (error) {
+    return null;
+  }
+
+  return null;
+};
 
 const tinyPng = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgRimG8QAAAAASUVORK5CYII=",
@@ -358,6 +383,120 @@ test.describe("Search flow UI integration - mocked comprehensive tests", () => {
 });
 
 test.describe("Search E2E tests", () => {
+  const runId = `pw${Date.now()}`;
+  const keyword = `e2ealpha${runId}`;
+  const mainName = `${keyword} phone`;
+  const relatedName = `${keyword} case`;
+  const mainSlug = `${keyword}-phone`;
+  const relatedSlug = `${keyword}-case`;
+  const unavailableKeyword = `no-match-${runId}`;
+
+  let client;
+  let db;
+  let useSeededData = false;
+  let seeded = {
+    categoryId: null,
+    mainId: null,
+    relatedId: null,
+    otherId: null,
+  };
+
+  test.beforeAll(async () => {
+    const mongoUrl = resolveMongoUrl();
+    if (!mongoUrl) return;
+
+    client = new MongoClient(mongoUrl);
+    await client.connect();
+    db = client.db();
+    useSeededData = true;
+
+    await db
+      .collection("products")
+      .deleteMany({ slug: { $regex: runId, $options: "i" } });
+    await db
+      .collection("categories")
+      .deleteMany({ slug: { $regex: runId, $options: "i" } });
+
+    seeded.categoryId = new ObjectId();
+    seeded.mainId = new ObjectId();
+    seeded.relatedId = new ObjectId();
+    seeded.otherId = new ObjectId();
+
+    await db.collection("categories").insertOne({
+      _id: seeded.categoryId,
+      name: `Search Category ${runId}`,
+      slug: `search-category-${runId}`,
+    });
+
+    const now = new Date();
+    const photoData = Buffer.from("search-e2e-image");
+
+    await db.collection("products").insertMany([
+      {
+        _id: seeded.mainId,
+        name: mainName,
+        slug: mainSlug,
+        description: `Main searchable product ${runId} with camera and battery`,
+        price: 1299,
+        category: seeded.categoryId,
+        quantity: 20,
+        shipping: true,
+        photo: {
+          data: photoData,
+          contentType: "image/png",
+        },
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        _id: seeded.relatedId,
+        name: relatedName,
+        slug: relatedSlug,
+        description: `Related accessory for ${mainName}`,
+        price: 39,
+        category: seeded.categoryId,
+        quantity: 50,
+        shipping: true,
+        photo: {
+          data: photoData,
+          contentType: "image/png",
+        },
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        _id: seeded.otherId,
+        name: `irrelevant-${runId}`,
+        slug: `irrelevant-${runId}`,
+        description: "Noise product for search e2e",
+        price: 10,
+        category: seeded.categoryId,
+        quantity: 5,
+        shipping: true,
+        photo: {
+          data: photoData,
+          contentType: "image/png",
+        },
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+  });
+
+  test.afterAll(async () => {
+    if (db) {
+      await db.collection("products").deleteMany({
+        _id: { $in: [seeded.mainId, seeded.relatedId, seeded.otherId].filter(Boolean) },
+      });
+      await db.collection("categories").deleteMany({
+        _id: { $in: [seeded.categoryId].filter(Boolean) },
+      });
+    }
+    if (client) {
+      await client.close();
+    }
+  });
+
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.removeItem("cart");
@@ -369,29 +508,34 @@ test.describe("Search E2E tests", () => {
   test("test search existing product displays results on search page", async ({ page }) => {
     await page.goto("/");
 
-    const firstProductTitle = page.locator(".card .card-title").first();
-    const firstProductName = (await firstProductTitle.textContent())?.trim();
-    const searchKeyword = firstProductName ? firstProductName.split(/\s+/)[0] : "";
-    if (!searchKeyword) {
-      test.skip(true, "Could not derive a stable search keyword.");
+    let keywordToSearch = keyword;
+    let expectedResultName = mainName;
+
+    if (!useSeededData) {
+      const firstProductTitle = page.locator(".card .card-title").first();
+      const firstProductName = (await firstProductTitle.textContent())?.trim();
+      keywordToSearch = firstProductName ? firstProductName.split(/\s+/)[0] : "";
+      expectedResultName = firstProductName || "";
+      if (!keywordToSearch) {
+        test.skip(true, "No searchable product found and no seeded DB data available.");
+      }
     }
 
-    await page.getByPlaceholder(/search/i).fill(searchKeyword);
+    await page.getByPlaceholder(/search/i).fill(keywordToSearch);
     await page.getByRole("button", { name: /^search$/i }).click();
 
     await expect(page).toHaveURL(/\/search$/);
-    await expect(page.getByRole("heading", { name: /search resuts/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /search results/i })).toBeVisible();
     await expect(page.getByText(/Found\s+\d+/i)).toBeVisible();
     await expect(page.getByText("No Products Found")).not.toBeVisible();
-    await expect(page.getByText(firstProductName || "", { exact: false }).first()).toBeVisible();
+    await expect(page.getByText(expectedResultName, { exact: false }).first()).toBeVisible();
   });
 
   // Owen Yeo Le Yang A0252047L
   test("test search unavailable product shows no products found", async ({ page }) => {
     await page.goto("/");
 
-    const keyword = `zzzz-unavailable-${Date.now()}`;
-    await page.getByPlaceholder(/search/i).fill(keyword);
+    await page.getByPlaceholder(/search/i).fill(unavailableKeyword);
     await page.getByRole("button", { name: /^search$/i }).click();
 
     await expect(page).toHaveURL(/\/search$/);
@@ -400,21 +544,25 @@ test.describe("Search E2E tests", () => {
   });
 
   test("test search results add to cart updates badge and local storage", async ({ page }) => {
-
     await page.goto("/");
 
-    const firstProductTitle = page.locator(".card .card-title").first();
-
-    const firstProductName = (await firstProductTitle.textContent())?.trim();
-    const searchKeyword = firstProductName ? firstProductName.split(/\s+/)[0] : "";
-    if (!searchKeyword) {
-      test.skip(true, "Could not derive a stable search keyword.");
+    let keywordToSearch = keyword;
+    if (!useSeededData) {
+      const firstProductTitle = page.locator(".card .card-title").first();
+      const firstProductName = (await firstProductTitle.textContent())?.trim();
+      keywordToSearch = firstProductName ? firstProductName.split(/\s+/)[0] : "";
+      if (!keywordToSearch) {
+        test.skip(true, "No searchable product found and no seeded DB data available.");
+      }
     }
 
-    await page.getByPlaceholder(/search/i).fill(searchKeyword);
+    await page.getByPlaceholder(/search/i).fill(keywordToSearch);
     await page.getByRole("button", { name: /^search$/i }).click();
 
-    await page.getByRole("button", { name: "ADD TO CART" }).first().click();
+    const resultCard = useSeededData
+      ? page.locator(".card.m-2", { hasText: mainName }).first()
+      : page.locator(".card.m-2").first();
+    await resultCard.getByRole("button", { name: "ADD TO CART" }).click();
 
     await expect(page.locator(".ant-badge-count", { hasText: "1" })).toBeVisible();
 
@@ -423,31 +571,53 @@ test.describe("Search E2E tests", () => {
       return raw ? JSON.parse(raw) : [];
     });
     expect(cartItems.length).toBeGreaterThan(0);
+    if (useSeededData) {
+      expect(cartItems[0].name.toLowerCase()).toContain(keyword.toLowerCase());
+    }
   });
 
   // Owen Yeo Le Yang A0252047L
   test("test search results more details navigates to product page", async ({ page }) => {
-
     await page.goto("/");
 
-    const firstProductTitle = page.locator(".card .card-title").first();
-
-    const firstProductName = (await firstProductTitle.textContent())?.trim();
-    const searchKeyword = firstProductName ? firstProductName.split(/\s+/)[0] : "";
-    if (!searchKeyword) {
-      test.skip(true, "Could not derive a stable search keyword.");
+    let keywordToSearch = keyword;
+    if (!useSeededData) {
+      const firstProductTitle = page.locator(".card .card-title").first();
+      const firstProductName = (await firstProductTitle.textContent())?.trim();
+      keywordToSearch = firstProductName ? firstProductName.split(/\s+/)[0] : "";
+      if (!keywordToSearch) {
+        test.skip(true, "No searchable product found and no seeded DB data available.");
+      }
     }
 
-    await page.getByPlaceholder(/search/i).fill(searchKeyword);
+    await page.getByPlaceholder(/search/i).fill(keywordToSearch);
     await page.getByRole("button", { name: /^search$/i }).click();
 
-    const firstCard = page.locator(".card.m-2").first();
-    const firstCardName = (await firstCard.locator(".card-title").first().textContent())?.trim();
-    await firstCard.getByRole("button", { name: /more details/i }).click();
+    const resultCard = useSeededData
+      ? page.locator(".card.m-2", {
+          has: page.locator(".card-title", { hasText: mainName }),
+        }).first()
+      : page.locator(".card.m-2").first();
+    await resultCard.getByRole("button", { name: /more details/i }).click();
 
-    const expectedSlug = firstCardName
-      ? firstCardName.replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-")
-      : "";
-    await expect(page).toHaveURL(new RegExp(`/product/${expectedSlug}`));
+    if (useSeededData) {
+      await expect(page).toHaveURL(new RegExp(`/product/${mainSlug}$`));
+      await expect(page.getByText(new RegExp(`Name\\s*:\\s*${keyword}`, "i"))).toBeVisible();
+    } else {
+      await expect(page).toHaveURL(/\/product\//);
+      await expect(page.getByRole("heading", { name: /product details/i })).toBeVisible();
+    }
+  });
+
+  // Owen Yeo Le Yang A0252047L
+  test("test product details page shows related products from same category", async ({ page }) => {
+    if (!useSeededData) {
+      test.skip(true, "Seeded DB data unavailable for deterministic related-product assertion.");
+    }
+
+    await page.goto(`/product/${mainSlug}`);
+
+    await expect(page.getByRole("heading", { name: /similar products/i })).toBeVisible();
+    await expect(page.getByText(relatedName, { exact: false })).toBeVisible();
   });
 });
