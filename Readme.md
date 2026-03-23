@@ -25,6 +25,12 @@
 - Register Flow
 - Login Flow
 - Logout Flow
+- DashBoard FLow
+- Profile Flow
+
+#### AI-Driven Test
+
+Create architecture diagram for the AI-Driven plan
 
 ### Daniel
 
