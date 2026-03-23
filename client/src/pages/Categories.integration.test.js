@@ -3,6 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import axios from "axios";
 
+// Daniel Loh, A0252099X
+
 // Use real hook (useCategory) but avoid Layout/Header complexity by mocking Layout
 jest.mock("../components/Layout", () => ({
     __esModule: true,
