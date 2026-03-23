@@ -1,13 +1,17 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import Search from "./Search";
 import { useSearch } from "../context/search";
+import { useCart } from "../context/cart";
 
 describe("Search", () => {
   const mockSetSearch = jest.fn();
+  const mockSetCart = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
+    useCart.mockReturnValue([[], mockSetCart]);
   });
 
   // Owen Yeo Le Yang A0252047L
@@ -20,7 +24,11 @@ describe("Search", () => {
       mockSetSearch,
     ]);
 
-    render(<Search />);
+    render(
+      <MemoryRouter>
+        <Search />
+      </MemoryRouter>
+    );
 
     expect(screen.getByText("Search Results")).toBeInTheDocument();
     expect(screen.getByText("No Products Found")).toBeInTheDocument();
@@ -53,7 +61,11 @@ describe("Search", () => {
       mockSetSearch,
     ]);
 
-    render(<Search />);
+    render(
+      <MemoryRouter>
+        <Search />
+      </MemoryRouter>
+    );
 
     expect(screen.getByText("Found 2")).toBeInTheDocument();
     expect(screen.getByText("Gaming Mouse")).toBeInTheDocument();
