@@ -1,10 +1,68 @@
 # CS4218 Project - Virtual Vault
 
+## Workload distribution (MS2)
+
+### Tae Won
+
+#### Integration Tests
+
+![Integration Tests](docs/taewon-integration-tests.png)
+
+#### UI Tests
+
+- View Orders Flow
+- Add to Cart Flow 
+- Checkout Flow
+
+### Kailash
+
+#### Integration Tests
+
+![Integration Tests](docs/kailash-integration-tests.png)
+
+#### UI Tests
+
+- Register Flow
+- Login Flow
+- Logout Flow
+
+### Daniel
+
+#### Integration Tests
+
+![Integration Tests](docs/daniel-integration-tests.png)
+
+#### UI Tests
+
+- View Category Page Flow
+- Browse Product Page Flow
+
+### Danielle
+
+#### Integration Tests
+
+![Integration Tests](docs/danielle-integration-tests.png)
+
+#### UI Tests
+
+- Admin Create, Update & Delete Product Flow
+
+### Owen
+
+#### Integration Tests
+
+![Integration Tests](docs/owen-integration-tests.png)
+
+#### UI Tests
+
+- Product Search Flow
+- Miscellaneous Page View Flow (Contact/Policy/About/Pagenotfound)
+
 ## MS1 CI URL
 [link to run](https://github.com/cs4218/cs4218-2520-ecom-project-cs4218-2520-team25/actions/runs/22292162848/job/64481405450)
 
 
-## Workload distribution
+## Workload distribution (MS1)
 
 ### Kailash
 

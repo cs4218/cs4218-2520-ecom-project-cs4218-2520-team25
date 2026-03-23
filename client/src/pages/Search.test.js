@@ -22,7 +22,7 @@ describe("Search", () => {
 
     render(<Search />);
 
-    expect(screen.getByText("Search Resuts")).toBeInTheDocument();
+    expect(screen.getByText("Search Results")).toBeInTheDocument();
     expect(screen.getByText("No Products Found")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /more details/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /add to cart/i })).not.toBeInTheDocument();
