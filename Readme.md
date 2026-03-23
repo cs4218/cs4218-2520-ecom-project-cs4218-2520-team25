@@ -37,6 +37,14 @@
 - View Category Page Flow
 - Browse Product Page Flow
 
+#### Test Coverage
+
+Generate SonarCube Report and wrote sonarqube configurations
+
+#### AI-Driven Test
+
+Develop script to get required test data for AI input
+
 ### Danielle
 
 #### Integration Tests
