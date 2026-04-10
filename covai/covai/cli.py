@@ -18,7 +18,7 @@ from pathlib import Path
 from covai.config import load_config, AIConfig
 from covai.collector import Collector
 from covai.analyzer import Analyzer
-from covai.agents import LLMModel, Agent
+from covai.agents import LLMModel
 
 
 # ---------------------------------------------------------------------------
@@ -183,7 +183,6 @@ def cmd_run(args, config, collector, analyzer):
 
     for p in generate_prompts:
         _print_prompt_preview(p, verbose=args.verbose)
-        # print(p)
 
 
     if args.output == "json":
@@ -204,9 +203,8 @@ def cmd_run(args, config, collector, analyzer):
     
     # Generate test cases for each prompt
     for p in generate_prompts:
-        gemini_model = LLMModel(AIConfig.model, AIConfig.api_key)
-        agent = Agent(gemini_model)
-        tests = agent.generate_tests(p)
+        llm_model = LLMModel.create(AIConfig)
+        tests = llm_model.generate(p)
 
         data_dir = Path('ai_generated_tests')
         ori_path = Path(p.file_path)

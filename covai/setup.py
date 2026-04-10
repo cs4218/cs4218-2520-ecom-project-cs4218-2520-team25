@@ -6,7 +6,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         "pyyaml>=6.0",
-        "google-genai>=1.0.0"
+        "google-genai>=1.0.0",
+        "anthropic>=0.45.0",  
+        "python-dotenv",
     ],
     entry_points={
         "console_scripts": [

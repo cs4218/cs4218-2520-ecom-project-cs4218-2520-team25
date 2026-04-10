@@ -3,6 +3,7 @@ Config loader for covai.yaml
 Supports defaults so minimal config files still work.
 """
 
+from enum import Enum
 import os
 import yaml
 from dataclasses import dataclass, field
@@ -70,9 +71,18 @@ class LanguageConfig:
     test_file_pattern: str = "test_{name}.py"
 
 
+class SupportedClients(Enum):
+    GOOGLE = 1
+    CLAUDE = 2
+
+class ModelNames(Enum):
+    GEM_3_FLASH = "gemini-3-flash-preview"
+    CLAUDE_HAIKU_4_5 = "claude-haiku-4-5"
+
 @dataclass
 class AIConfig:
-    model: str = "gemini-3-flash-preview"
+    client: SupportedClients = SupportedClients.GOOGLE
+    model: str = ModelNames.GEM_3_FLASH.value
     max_iterations: int = 3
     max_tokens: int = 4096         
     api_key: str = os.getenv("API_KEY")
