@@ -7,6 +7,9 @@ import os
 import yaml
 from dataclasses import dataclass, field
 from typing import Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 DEFAULT_CONFIG = {
@@ -37,9 +40,10 @@ DEFAULT_CONFIG = {
         },
     },
     "ai": {
-        "model": "claude-3-5-sonnet-20241022",
+        "model": "gemini-3-flash-preview",
         "max_iterations": 3,
         "max_tokens": 4096,
+        "api_key": f"{os.getenv('API_KEY')}"
     },
     "rules": {
         "ignore": [
@@ -68,9 +72,10 @@ class LanguageConfig:
 
 @dataclass
 class AIConfig:
-    model: str = "claude-3-5-sonnet-20241022"
+    model: str = "gemini-3-flash-preview"
     max_iterations: int = 3
-    max_tokens: int = 4096
+    max_tokens: int = 4096         
+    api_key: str = os.getenv("API_KEY")
 
 
 @dataclass

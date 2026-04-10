@@ -13,10 +13,12 @@ import argparse
 import json
 import os
 import sys
+from pathlib import Path
 
-from covai.config import load_config
+from covai.config import load_config, AIConfig
 from covai.collector import Collector
 from covai.analyzer import Analyzer
+from covai.agents import LLMModel, Agent
 
 
 # ---------------------------------------------------------------------------
@@ -51,7 +53,6 @@ def _print_prompt_preview(prompt, verbose: bool = False):
         print()
     print(f"     Has source:        {'✔' if prompt.payload.source_code else '✘'}")
     print(f"     Has existing tests:{'✔' if prompt.payload.existing_tests else '✘'}")
-
     if verbose:
         print(f"\n  ── System Prompt ──────────────────────────────────")
         print(prompt.system_prompt[:600] + ("..." if len(prompt.system_prompt) > 600 else ""))
@@ -182,6 +183,8 @@ def cmd_run(args, config, collector, analyzer):
 
     for p in generate_prompts:
         _print_prompt_preview(p, verbose=args.verbose)
+        # print(p)
+
 
     if args.output == "json":
         out = {
@@ -198,8 +201,23 @@ def cmd_run(args, config, collector, analyzer):
 
   Ready for AI integration layer (next step).
 """)
+    
+    # Generate test cases for each prompt
+    for p in generate_prompts:
+        gemini_model = LLMModel(AIConfig.model, AIConfig.api_key)
+        agent = Agent(gemini_model)
+        tests = agent.generate_tests(p)
 
+        data_dir = Path('ai_generated_tests')
+        ori_path = Path(p.file_path)
+        new_file_name = f"{ori_path.stem}.test{ori_path.suffix}"
 
+        file_path = data_dir / ori_path.with_name(new_file_name)
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        file_path.write_text(tests)
+
+    print("Test cases have been generated and stored in ai_generated_tests")
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
