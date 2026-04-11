@@ -1,0 +1,42 @@
+config:
+  # Updated to 6060 to match your server.js default port
+  target: 'http://localhost:6060' 
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 50
+      name: "Ramp up load"
+
+scenarios:
+  - name: "Casual Browsing"
+    weight: 5 # Runs 50% of the time (5 out of 10 total weight)
+    flow:
+      - get:
+          url: "/api/v1/category/get-category"
+      - think: 2 # Simulate user pausing to read
+      - get:
+          url: "/api/v1/product/get-product" 
+
+  - name: "Search and View"
+    weight: 3 # Runs 30% of the time
+    flow:
+      - get:
+          url: "/api/v1/product/search/phone" # Replace with a valid search endpoint/keyword
+      - think: 3
+
+  - name: "Login and View Protected Data"
+    weight: 2 # Runs 20% of the time
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "test@example.com" # Replace with a valid test user in your DB
+            password: "password123"   # Replace with the user's password
+          capture:
+            - json: "$.token" # Captures the JWT token from the JSON response
+              as: "token"     # Saves it as a variable named 'token'
+      - think: 1
+      - get:
+          url: "/api/v1/auth/user-auth" # Replace with a route that requires JWT auth
+          headers:
+            Authorization: "Bearer {{ token }}" # Injects the captured token
