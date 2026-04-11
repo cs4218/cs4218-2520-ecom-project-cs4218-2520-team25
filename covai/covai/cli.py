@@ -15,7 +15,7 @@ import os
 import sys
 from pathlib import Path
 
-from covai.config import load_config, AIConfig
+from covai.config import CovaiConfigError, load_config, validate_ai_config
 from covai.collector import Collector
 from covai.analyzer import Analyzer
 from covai.agents import LLMModel
@@ -58,6 +58,13 @@ def _print_prompt_preview(prompt, verbose: bool = False):
         print(prompt.system_prompt[:600] + ("..." if len(prompt.system_prompt) > 600 else ""))
         print(f"\n  ── User Prompt ────────────────────────────────────")
         print(prompt.user_prompt[:800] + ("..." if len(prompt.user_prompt) > 800 else ""))
+
+
+def _add_model_argument(parser):
+    parser.add_argument(
+        "--model", choices=["gemini", "claude"], default=None,
+        help="AI model provider to use (default: covai.yaml default_model, else gemini)"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -203,7 +210,7 @@ def cmd_run(args, config, collector, analyzer):
     
     # Generate test cases for each prompt
     for p in generate_prompts:
-        llm_model = LLMModel.create(AIConfig)
+        llm_model = LLMModel.create(config.ai)
         tests = llm_model.generate(p)
 
         data_dir = Path('ai_generated_tests')
@@ -245,30 +252,42 @@ def main():
         "--root", default=".",
         help="Project root directory (default: current directory)"
     )
+    _add_model_argument(parser)
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # analyze
     p_analyze = subparsers.add_parser("analyze", help="Analyze coverage gaps")
     p_analyze.add_argument("--file", default=None, help="Target a specific file")
+    _add_model_argument(p_analyze)
 
     # generate
     p_generate = subparsers.add_parser("generate", help="Generate tests for a file")
     p_generate.add_argument("file", help="Source file to generate tests for")
+    _add_model_argument(p_generate)
 
     # run
     p_run = subparsers.add_parser("run", help="Full pipeline: analyze + generate")
     p_run.add_argument("--file", default=None, help="Target a specific file")
+    _add_model_argument(p_run)
 
     args = parser.parse_args()
 
     # Load config
-    config = load_config(args.config)
+    try:
+        config = load_config(args.config, selected_model=args.model)
+        validate_ai_config(config, require_api_key=args.command == "run")
+    except CovaiConfigError as exc:
+        print(f"\n  ✘ Invalid AI configuration\n\n  {exc}\n")
+        sys.exit(1)
 
     # Detect or override language
     language = args.language or _detect_language(args.config or "covai.yaml")
     config.active_language = language
-    print(f"\n  covai | language: {language} | threshold: {config.coverage.threshold}%")
+    print(
+        f"\n  covai | language: {language} | threshold: {config.coverage.threshold}%"
+        f" | ai: {config.ai.selected_model} ({config.ai.model})"
+    )
 
     # Build shared components
     collector = Collector(config, project_root=args.root)
@@ -280,7 +299,11 @@ def main():
         "generate": cmd_generate,
         "run": cmd_run,
     }
-    dispatch[args.command](args, config, collector, analyzer)
+    try:
+        dispatch[args.command](args, config, collector, analyzer)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"\n  ✘ {exc}\n")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

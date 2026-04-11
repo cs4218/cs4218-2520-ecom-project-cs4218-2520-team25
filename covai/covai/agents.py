@@ -2,8 +2,7 @@ from google import genai
 from anthropic import Anthropic
 
 from covai.models import AnalysisPrompt
-from covai.config import SupportedClients
-from covai.config import AIConfig
+from covai.config import AIConfig, SupportedClients
 
 class LLMModel:
 
@@ -13,6 +12,11 @@ class LLMModel:
     
     @staticmethod
     def create(ai_config: AIConfig):
+        if not ai_config.api_key:
+            raise ValueError(
+                "Missing API key for the selected AI model. "
+                f"Expected covai.yaml to define ai.models.{ai_config.selected_model}.api_key."
+            )
         if ai_config.client == SupportedClients.GOOGLE:
             return GeminiModel(ai_config)
         elif ai_config.client == SupportedClients.CLAUDE:

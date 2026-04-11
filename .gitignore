@@ -9,3 +9,8 @@ node_modules
 /coverage/*
 .scannerwork/.sonar_lock
 .scannerwork/report-task.txt
+covai.yaml
+
+# covai pip install files
+/covai/covai/__pycache__/
+/covai/covai.egg-info/
