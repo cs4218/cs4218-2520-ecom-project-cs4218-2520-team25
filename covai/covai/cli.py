@@ -13,6 +13,8 @@ import argparse
 import json
 import os
 import sys
+import threading
+import time
 from pathlib import Path
 
 from covai.config import CovaiConfigError, load_config, validate_ai_config
@@ -58,6 +60,39 @@ def _print_prompt_preview(prompt, verbose: bool = False):
         print(prompt.system_prompt[:600] + ("..." if len(prompt.system_prompt) > 600 else ""))
         print(f"\n  ── User Prompt ────────────────────────────────────")
         print(prompt.user_prompt[:800] + ("..." if len(prompt.user_prompt) > 800 else ""))
+
+
+def _run_with_progress(message: str, action):
+    """Show a live progress indicator while waiting for a blocking action."""
+    stop_event = threading.Event()
+    start_time = time.time()
+
+    def _spinner():
+        frames = ["|", "/", "-", "\\"]
+        idx = 0
+        while not stop_event.is_set():
+            elapsed = int(time.time() - start_time)
+            frame = frames[idx % len(frames)]
+            print(
+                f"\r  {frame} {message} ({elapsed}s elapsed)",
+                end="",
+                flush=True,
+            )
+            idx += 1
+            stop_event.wait(0.2)
+
+    spinner_thread = threading.Thread(target=_spinner, daemon=True)
+    spinner_thread.start()
+    try:
+        result = action()
+    finally:
+        stop_event.set()
+        spinner_thread.join()
+        print("\r" + " " * 80 + "\r", end="", flush=True)
+
+    elapsed = time.time() - start_time
+    print(f"  ✔ {message} completed in {elapsed:.1f}s")
+    return result
 
 
 def _add_model_argument(parser):
@@ -199,19 +234,28 @@ def cmd_run(args, config, collector, analyzer):
         }
         print("\n" + json.dumps(out, indent=2))
 
-    _print_section("✅ Run pipeline complete")
+    _print_section("✅ Prompt preparation complete")
     print(f"""
   Prepared:
     • {len(analyze_prompts)} analysis prompts  → send to AI to identify gaps
     • {len(generate_prompts)} generation prompts → send to AI to write tests
-
-  Ready for AI integration layer (next step).
 """)
-    
-    # Generate test cases for each prompt
-    for p in generate_prompts:
-        llm_model = LLMModel.create(config.ai)
-        tests = llm_model.generate(p)
+
+    _print_section("🤖 Generating tests with AI")
+    print(
+        f"\n  Using {config.ai.selected_model} ({config.ai.model}) "
+        f"for {len(generate_prompts)} file(s)."
+    )
+
+    llm_model = LLMModel.create(config.ai)
+
+    for idx, p in enumerate(generate_prompts, start=1):
+        print(f"\n  [{idx}/{len(generate_prompts)}] Preparing request for {p.file_path}")
+        print("  Sending prompt to AI model and waiting for response...")
+        tests = _run_with_progress(
+            f"Generating tests for {p.file_path}",
+            lambda prompt=p: llm_model.generate(prompt),
+        )
 
         data_dir = Path('ai_generated_tests')
         ori_path = Path(p.file_path)
@@ -221,8 +265,9 @@ def cmd_run(args, config, collector, analyzer):
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
         file_path.write_text(tests)
+        print(f"  ✔ Saved generated tests to {file_path}")
 
-    print("Test cases have been generated and stored in ai_generated_tests")
+    print("\n  ✅ Test cases have been generated and stored in ai_generated_tests")
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
