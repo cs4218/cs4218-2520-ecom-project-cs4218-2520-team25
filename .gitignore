@@ -1,5 +1,6 @@
 node_modules
 .env
+.venv/
 
 /test-results/
 /playwright-report/
@@ -7,7 +8,11 @@ node_modules
 /playwright/.cache/
 .env
 /coverage/*
+/coverage_after/*
+/covai/
+**/covai.yaml
 
 .venv/
 
 /tests/load-test/reports/*
+/ai_generated_tests/*
