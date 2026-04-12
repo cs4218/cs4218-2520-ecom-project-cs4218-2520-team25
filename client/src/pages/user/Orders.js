@@ -3,17 +3,30 @@ import UserMenu from "../../components/UserMenu";
 import Layout from "./../../components/Layout";
 import axios from "axios";
 import { useAuth } from "../../context/auth";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import moment from "moment";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [auth, setAuth] = useAuth();
+  const navigate = useNavigate();
   const getOrders = async () => {
     try {
       const { data } = await axios.get("/api/v1/auth/orders");
       setOrders(data);
     } catch (error) {
       console.log(error);
+      const msg = error?.response?.data?.message || "";
+      if (
+        error?.response?.status === 401 ||
+        (typeof msg === "string" && msg.toLowerCase().includes("expired"))
+      ) {
+        toast.error("Session expired. Please login again.");
+        setAuth({});
+        localStorage.removeItem("auth");
+        navigate("/login");
+      }
     }
   };
 

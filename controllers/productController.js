@@ -58,7 +58,8 @@ export const createProductController = async (req, res) => {
 export const getProductController = async (req, res) => {
   try {
     const products = await productModel
-      .find({})
+      // only include products with quantity > 0
+      .find({ quantity: { $gt: 0 } })
       .populate("category")
       .select("-photo")
       .limit(12)
@@ -107,8 +108,8 @@ export const getSingleProductController = async (req, res) => {
 export const productPhotoController = async (req, res) => {
   try {
     const product = await productModel.findById(req.params.pid)
-                                      .select("photo");
-    
+      .select("photo");
+
     if (product.photo.data) {
       res.set("Content-type", product.photo.contentType);
       return res.status(200).send(product.photo.data);
@@ -197,6 +198,8 @@ export const productFiltersController = async (req, res) => {
     let args = {};
     if (checked.length > 0) args.category = checked;
     if (radio.length) args.price = { $gte: radio[0], $lte: radio[1] };
+    // only include products with quantity > 0
+    args.quantity = { $gt: 0 };
     const products = await productModel.find(args);
     res.status(200).send({
       success: true,
@@ -215,7 +218,8 @@ export const productFiltersController = async (req, res) => {
 // product count
 export const productCountController = async (req, res) => {
   try {
-    const total = await productModel.find({}).estimatedDocumentCount();
+    // count only available products
+    const total = await productModel.find({ quantity: { $gt: 0 } }).estimatedDocumentCount();
     res.status(200).send({
       success: true,
       total,
@@ -236,7 +240,7 @@ export const productListController = async (req, res) => {
     const perPage = 6;
     const page = req.params.page ? req.params.page : 1;
     const products = await productModel
-      .find({})
+      .find({ quantity: { $gt: 0 } })
       .select("-photo")
       .skip((page - 1) * perPage)
       .limit(perPage)
@@ -265,6 +269,7 @@ export const searchProductController = async (req, res) => {
           { name: { $regex: keyword, $options: "i" } },
           { description: { $regex: keyword, $options: "i" } },
         ],
+        quantity: { $gt: 0 },
       })
       .select("-photo");
     res.json(resutls);
@@ -286,6 +291,7 @@ export const relatedProductController = async (req, res) => {
       .find({
         category: cid,
         _id: { $ne: pid },
+        quantity: { $gt: 0 },
       })
       .select("-photo")
       .limit(3)
@@ -308,7 +314,7 @@ export const relatedProductController = async (req, res) => {
 export const productCategoryController = async (req, res) => {
   try {
     const category = await categoryModel.findOne({ slug: req.params.slug });
-    const products = await productModel.find({ category }).populate("category");
+    const products = await productModel.find({ category, quantity: { $gt: 0 } }).populate("category");
     res.status(200).send({
       success: true,
       category,
@@ -348,6 +354,51 @@ export const brainTreePaymentController = async (req, res) => {
     cart.map((i) => {
       total += i.price;
     });
+    // Attempt to reserve stock atomically (decrement) before creating transaction.
+    // If any reservation fails, roll back previous reservations and return 409.
+    const counts = {};
+    cart.forEach((item) => {
+      const id = item._id?.toString ? item._id.toString() : item._id;
+      counts[id] = (counts[id] || 0) + 1;
+    });
+
+    const reserved = [];
+    try {
+      for (const [pid, cnt] of Object.entries(counts)) {
+        const updated = await productModel.findOneAndUpdate(
+          { _id: pid, quantity: { $gte: cnt } },
+          { $inc: { quantity: -cnt } }
+        );
+        if (!updated) {
+          // insufficient for this pid — gather info to report
+          const prod = await productModel.find({ _id: pid }).select("name quantity");
+          const available = prod && prod[0] ? prod[0].quantity : 0;
+          // rollback previously reserved
+          for (const r of reserved) {
+            await productModel.updateOne({ _id: r.pid }, { $inc: { quantity: r.cnt } });
+          }
+          return res.status(409).send({
+            success: false,
+            message: "Insufficient stock for some products",
+            insufficient: [
+              { _id: pid, name: prod && prod[0] ? prod[0].name : undefined, available, requested: cnt },
+            ],
+          });
+        }
+        reserved.push({ pid, cnt });
+      }
+    } catch (reserveErr) {
+      console.log("Error reserving stock:", reserveErr);
+      // rollback any reserved
+      for (const r of reserved) {
+        try {
+          await productModel.updateOne({ _id: r.pid }, { $inc: { quantity: r.cnt } });
+        } catch (e) {
+          console.log("Rollback failed for", r.pid, e);
+        }
+      }
+      return res.status(500).send({ success: false, message: "Error reserving stock" });
+    }
     let newTransaction = gateway.transaction.sale(
       {
         amount: total,
@@ -356,16 +407,27 @@ export const brainTreePaymentController = async (req, res) => {
           submitForSettlement: true,
         },
       },
-      function (error, result) {
+      async function (error, result) {
         if (result) {
-          const order = new orderModel({
+          // save order
+          const order = await new orderModel({
             products: cart,
             payment: result,
             buyer: req.user._id,
           }).save();
-          res.json({ ok: true });
+
+          // reservation already decremented quantities; nothing else to do
+          return res.json({ ok: true });
         } else {
-          res.status(500).send(error);
+          // transaction failed — roll back reservations
+          for (const r of reserved) {
+            try {
+              await productModel.updateOne({ _id: r.pid }, { $inc: { quantity: r.cnt } });
+            } catch (e) {
+              console.log("Rollback failed for", r.pid, e);
+            }
+          }
+          return res.status(500).send(error);
         }
       }
     );
