@@ -1,5 +1,13 @@
 # CS4218 Project - Virtual Vault
 
+## Workload distribution (MS3)
+
+- **Load Testing**: Danielle 
+- **Stress Testing**: Owen
+- **Spike Testing**: Taewon
+- **Soak Testing**: Kailash
+- **Volume/Concurrency/Throughput/Capacity**: Daniel
+
 ## Workload distribution (MS2)
 
 ### Tae Won
