@@ -21,6 +21,7 @@ from covai.config import CovaiConfigError, load_config, validate_ai_config
 from covai.collector import Collector
 from covai.analyzer import Analyzer
 from covai.agents import LLMModel
+from covai.verification import VerificationRunner
 
 
 # ---------------------------------------------------------------------------
@@ -102,6 +103,16 @@ def _add_model_argument(parser):
     )
 
 
+def _save_last_analyzed_files(collector: Collector, files) -> None:
+    """Persist the last analyzed source file list for `covai verify`."""
+    tmp_dir = Path(collector.project_root) / "covai" / ".tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "files": sorted({collector.normalize_path(file_coverage.file_path) for file_coverage in files}),
+    }
+    (tmp_dir / "last_analyzed.json").write_text(json.dumps(payload, indent=2))
+
+
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
@@ -129,6 +140,7 @@ def cmd_analyze(args, config, collector, analyzer):
 
     print(f"\n  Found {len(files)} file(s) below threshold:\n")
     print(collector.summary(files))
+    _save_last_analyzed_files(collector, files)
 
     _print_section("🧠 Building AI Analysis Prompts")
     prompts = analyzer.prepare_all(files)
@@ -207,6 +219,7 @@ def cmd_run(args, config, collector, analyzer):
 
     print(f"\n  {len(files)} file(s) queued for improvement:\n")
     print(collector.summary(files))
+    _save_last_analyzed_files(collector, files)
 
     # Step 2: Build analysis prompts
     print("\n\n  Step 2/3 — Building analysis prompts (gap identification)...")
@@ -268,6 +281,23 @@ def cmd_run(args, config, collector, analyzer):
         print(f"  ✔ Saved generated tests to {file_path}")
 
     print("\n  ✅ Test cases have been generated and stored in ai_generated_tests")
+
+
+def cmd_verify(args, config, collector, analyzer):
+    """
+    covai verify [--file <path>]
+    Run baseline vs candidate Jest coverage verification for analyzed files.
+    """
+    _print_section("🧪 covai verify")
+
+    runner = VerificationRunner(config, collector)
+    payload = runner.run(target_file=args.file)
+
+    if args.output == "json":
+        print(json.dumps(payload, indent=2))
+        return
+
+    runner.print_report(payload)
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -316,6 +346,13 @@ def main():
     p_run.add_argument("--file", default=None, help="Target a specific file")
     _add_model_argument(p_run)
 
+    # verify
+    p_verify = subparsers.add_parser(
+        "verify",
+        help="Verify generated tests with baseline vs candidate coverage",
+    )
+    p_verify.add_argument("--file", default=None, help="Target a specific file")
+
     args = parser.parse_args()
 
     # Load config
@@ -343,6 +380,7 @@ def main():
         "analyze": cmd_analyze,
         "generate": cmd_generate,
         "run": cmd_run,
+        "verify": cmd_verify,
     }
     try:
         dispatch[args.command](args, config, collector, analyzer)

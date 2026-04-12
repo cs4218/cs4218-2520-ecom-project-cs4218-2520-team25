@@ -4,6 +4,7 @@ node_modules
 /test-results/
 /playwright-report/
 /blob-report/
+/tests/load-test/reports/
 /playwright/.cache/
 .env
 /coverage/*
@@ -14,3 +15,4 @@ covai.yaml
 # covai pip install files
 /covai/covai/__pycache__/
 /covai/covai.egg-info/
+/covai/.tmp/
