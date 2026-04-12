@@ -8,11 +8,14 @@ node_modules
 /playwright/.cache/
 .env
 /coverage/*
-/coverage_after/*
-/covai/
-**/covai.yaml
 
-.venv/
+/ai_generated_tests/*
+.scannerwork/.sonar_lock
+.scannerwork/report-task.txt
+covai.yaml
+
+# covai pip install files
+/covai/covai/__pycache__/
+/covai/covai.egg-info/
 
 /tests/load-test/reports/*
-/ai_generated_tests/*
