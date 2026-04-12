@@ -6,8 +6,8 @@ import { check, sleep } from 'k6';
 // Danielle Loh, A0257220N
 export const options = {
   stages: [
-    { duration: '2m', target: 100 }, // ramp up
-    { duration: '4m', target: 100 }, // sustain
+    { duration: '2m', target: 200 }, // ramp up
+    { duration: '4m', target: 200 }, // sustain
     { duration: '3m', target: 0 }, // ramp down
   ],
   // define thresholds
@@ -23,7 +23,9 @@ export default () => {
   const res = http.get(`http://localhost:6060/api/v1/product/product-list/${page}`);
 
   check(res, {
-    'status is 200': (r) => r.status === 200,
+    "status is 200": (r) => r.status === 200,
+    "success is true": (r) => r.json("success") === true,
+    "products exists": (r) => Array.isArray(r.json("products")),
   });
   
   sleep(Math.random() * 2 + 1); // think time: 1 – 3s between requests
