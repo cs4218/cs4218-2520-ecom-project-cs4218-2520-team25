@@ -125,6 +125,7 @@ export const productPhotoController = async (req, res) => {
 };
 
 // delete controller
+// Han Tae Won, A0221684E
 export const deleteProductController = async (req, res) => {
   try {
     await productModel.findByIdAndDelete(req.params.pid).select("-photo");
@@ -143,6 +144,7 @@ export const deleteProductController = async (req, res) => {
 };
 
 //upate producta
+// Han Tae Won, A0221684E
 export const updateProductController = async (req, res) => {
   try {
     const { name, description, price, category, quantity, shipping } =
@@ -192,15 +194,26 @@ export const updateProductController = async (req, res) => {
 };
 
 // filters
+// Han Tae Won, A0221684E
 export const productFiltersController = async (req, res) => {
   try {
-    const { checked, radio } = req.body;
-    let args = {};
-    if (checked.length > 0) args.category = checked;
-    if (radio.length) args.price = { $gte: radio[0], $lte: radio[1] };
-    // only include products with quantity > 0
-    args.quantity = { $gt: 0 };
-    const products = await productModel.find(args);
+    const { checked = [], radio = [] } = req.body || {};
+    const args = {};
+
+    if (Array.isArray(checked) && checked.length > 0) {
+      args.category = { $in: checked };
+    }
+
+    if (Array.isArray(radio) && radio.length === 2) {
+      args.price = { $gte: radio[0], $lte: radio[1] };
+    }
+
+    const products = await productModel
+      .find(args)
+      .select("-photo")
+      .populate("category")
+      .sort({ createdAt: -1 });
+
     res.status(200).send({
       success: true,
       products,
