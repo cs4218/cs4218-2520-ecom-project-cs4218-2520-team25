@@ -52,6 +52,17 @@ const CartPage = () => {
       setClientToken(data?.clientToken);
     } catch (error) {
       console.log(error);
+      // if token expired or auth error, clear and redirect to login
+      const msg = error?.response?.data?.message || "Session error";
+      if (
+        error?.response?.status === 401 ||
+        (typeof msg === "string" && msg.toLowerCase().includes("expired"))
+      ) {
+        toast.error("Session expired. Please login again.");
+        setAuth({});
+        localStorage.removeItem("auth");
+        navigate("/login");
+      }
     }
   };
   useEffect(() => {
@@ -75,6 +86,19 @@ const CartPage = () => {
     } catch (error) {
       console.log(error);
       setLoading(false);
+      // handle token expired / unauthorized
+      const msg = error?.response?.data?.message || "";
+      if (
+        error?.response?.status === 401 ||
+        (typeof msg === "string" && msg.toLowerCase().includes("expired"))
+      ) {
+        toast.error("Session expired. Please login again.");
+        setAuth({});
+        localStorage.removeItem("auth");
+        navigate("/login");
+        return;
+      }
+      toast.error("Payment failed. Please try again.");
     }
   };
   return (
@@ -88,9 +112,8 @@ const CartPage = () => {
                 : `Hello  ${auth?.token && auth?.user?.name}`}
               <p className="text-center">
                 {cart?.length
-                  ? `You Have ${cart.length} items in your cart ${
-                      auth?.token ? "" : "please login to checkout !"
-                    }`
+                  ? `You Have ${cart.length} items in your cart ${auth?.token ? "" : "please login to checkout !"
+                  }`
                   : " Your Cart Is Empty"}
               </p>
             </h1>
