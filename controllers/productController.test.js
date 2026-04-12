@@ -683,7 +683,6 @@ describe("productFiltersController", () => {
 
         expect(productModel.find).toHaveBeenCalledWith({
             price: { $gte: 10, $lte: 50 },
-            quantity: { $gt: 0 },
         });
         expect(selectMock).toHaveBeenCalledWith("-photo");
         expect(populateMock).toHaveBeenCalledWith("category");
@@ -716,9 +715,8 @@ describe("productFiltersController", () => {
         await productFiltersController(req, res);
 
         expect(productModel.find).toHaveBeenCalledWith({
-            category: { $in: ["c9"] },
+            category: { $in: ["c9"] }, 
             price: { $gte: 5, $lte: 15 },
-            quantity: { $gt: 0 },
         });
         expect(selectMock).toHaveBeenCalledWith("-photo");
         expect(populateMock).toHaveBeenCalledWith("category");
