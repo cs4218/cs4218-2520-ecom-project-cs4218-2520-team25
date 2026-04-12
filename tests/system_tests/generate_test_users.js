@@ -1,3 +1,5 @@
+// Kailashwaran, A0253385Y
+
 const { faker } = require('@faker-js/faker');
 const fs = require('fs');
 const bcrypt = require('bcrypt');
