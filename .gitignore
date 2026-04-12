@@ -1,5 +1,6 @@
 node_modules
 .env
+.venv/
 
 /test-results/
 /playwright-report/
@@ -7,6 +8,8 @@ node_modules
 /playwright/.cache/
 .env
 /coverage/*
+
+/ai_generated_tests/*
 .scannerwork/.sonar_lock
 .scannerwork/report-task.txt
 covai.yaml
@@ -14,3 +17,5 @@ covai.yaml
 # covai pip install files
 /covai/covai/__pycache__/
 /covai/covai.egg-info/
+
+/tests/load-test/reports/*
