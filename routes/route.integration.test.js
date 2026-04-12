@@ -51,8 +51,8 @@ describe("Route integration tests - basic route wiring and auth", () => {
         // without token
         const unauth = await request(app).get("/api/v1/auth/user-auth");
         // middleware returns 500 and message on missing/invalid token
-        expect(unauth.statusCode).toBe(500);
-        expect(unauth.body).toHaveProperty("message", "Error in signIn middleware");
+        expect(unauth.statusCode).toBe(401);
+        expect(unauth.body).toHaveProperty("message", "Unauthorized: No token provided");
 
         // create a normal user and sign token
         const user = await userModel.create({

@@ -4,7 +4,6 @@ import { useCart } from "../context/cart";
 import { useAuth } from "../context/auth";
 import { useNavigate } from "react-router-dom";
 import DropIn from "braintree-web-drop-in-react";
-import { AiFillWarning } from "react-icons/ai";
 import axios from "axios";
 import toast from "react-hot-toast";
 import "../styles/CartStyles.css";
@@ -52,6 +51,17 @@ const CartPage = () => {
       setClientToken(data?.clientToken);
     } catch (error) {
       console.log(error);
+      // if token expired or auth error, clear and redirect to login
+      const msg = error?.response?.data?.message || "Session error";
+      if (
+        error?.response?.status === 401 ||
+        (typeof msg === "string" && msg.toLowerCase().includes("expired"))
+      ) {
+        toast.error("Session expired. Please login again.");
+        setAuth({});
+        localStorage.removeItem("auth");
+        navigate("/login");
+      }
     }
   };
   useEffect(() => {
@@ -75,6 +85,60 @@ const CartPage = () => {
     } catch (error) {
       console.log(error);
       setLoading(false);
+      // handle token expired / unauthorized
+      const msg = error?.response?.data?.message || "";
+      // handle insufficient stock returned from server
+      if (error?.response?.status === 409) {
+        const insufficient = error?.response?.data?.insufficient || [];
+        if (insufficient.length) {
+          // Adjust quantities in cart based on availability: reduce occurrences to `available`, remove if 0
+          const byId = {};
+          cart.forEach((item) => {
+            const id = item._id?.toString ? item._id.toString() : item._id;
+            if (!byId[id]) byId[id] = [];
+            byId[id].push(item);
+          });
+
+          const insuffMap = {};
+          insufficient.forEach((p) => {
+            const id = p._id?.toString ? p._id.toString() : p._id;
+            insuffMap[id] = p;
+          });
+
+          const newCart = [];
+          Object.entries(byId).forEach(([id, items]) => {
+            if (insuffMap[id]) {
+              const available = insuffMap[id].available || 0;
+              if (available > 0) {
+                // keep up to `available` occurrences
+                newCart.push(...items.slice(0, available));
+              }
+              // if available === 0 -> remove all occurrences (push nothing)
+            } else {
+              newCart.push(...items);
+            }
+          });
+
+          setCart(newCart);
+          localStorage.setItem("cart", JSON.stringify(newCart));
+          const names = insufficient
+            .map((p) => `${p.name} (available: ${p.available})`)
+            .join(", ");
+          toast.error(`Insufficient stock: ${names}. Cart quantities adjusted.`);
+          return;
+        }
+      }
+      if (
+        error?.response?.status === 401 ||
+        (typeof msg === "string" && msg.toLowerCase().includes("expired"))
+      ) {
+        toast.error("Session expired. Please login again.");
+        setAuth({});
+        localStorage.removeItem("auth");
+        navigate("/login");
+        return;
+      }
+      toast.error("Payment failed. Please try again.");
     }
   };
   return (
@@ -88,9 +152,8 @@ const CartPage = () => {
                 : `Hello  ${auth?.token && auth?.user?.name}`}
               <p className="text-center">
                 {cart?.length
-                  ? `You Have ${cart.length} items in your cart ${
-                      auth?.token ? "" : "please login to checkout !"
-                    }`
+                  ? `You Have ${cart.length} items in your cart ${auth?.token ? "" : "please login to checkout !"
+                  }`
                   : " Your Cart Is Empty"}
               </p>
             </h1>
