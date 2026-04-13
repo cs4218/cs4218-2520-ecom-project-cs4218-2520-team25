@@ -5,6 +5,7 @@ node_modules
 /test-results/
 /playwright-report/
 /blob-report/
+/tests/load-test/reports/
 /playwright/.cache/
 .env
 /coverage/*
@@ -19,3 +20,4 @@ covai.yaml
 /covai/covai.egg-info/
 
 /tests/load-test/reports/*
+/covai/.tmp/
