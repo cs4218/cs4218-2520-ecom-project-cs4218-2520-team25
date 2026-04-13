@@ -6,7 +6,7 @@
 - **Stress Testing**: Owen
 - **Spike Testing**: Taewon
 - **Soak Testing**: Kailash
-- **Volume/Concurrency/Throughput/Capacity**: Daniel
+- **Concurrency**: Daniel
 
 ## Workload distribution (MS2)
 
