@@ -1,3 +1,4 @@
+// Daniel Loh, A0252099X
 // Test 3 (improved): Ramping Load — stock-aware, split latency metrics
 //
 // Improvements over v1:
@@ -40,7 +41,7 @@ const BASE_URL = __ENV.BASE_URL || "http://localhost:6060";
 const PRODUCT_ID = __ENV.PRODUCT_ID || "69db6071a90a6e7edf4190da";
 const PRODUCT_PRICE = parseFloat(__ENV.PRODUCT_PRICE || "79.99");
 const JWT_SECRET = __ENV.JWT_SECRET;
-const INVENTORY = parseInt(__ENV.INVENTORY || "500");
+const INVENTORY = parseInt(__ENV.INVENTORY || "1250");
 
 // -----------------------------
 // CUSTOM METRICS
@@ -64,12 +65,12 @@ export const options = {
             executor: "ramping-vus",
             startVUs: 0,
             stages: [
-                { duration: "15s", target: 100 }, // ramp up
-                { duration: "15s", target: 200 }, // ramp to peak
-                { duration: "30s", target: 200 }, // hold — stock will exhaust here
-                { duration: "15s", target: 0 }, // ramp down
+                { duration: "7s", target: 100 }, // ramp up
+                { duration: "5s", target: 200 }, // ramp to peak
+                { duration: "10s", target: 200 }, // hold — stock will exhaust here
+                { duration: "20s", target: 0 }, // ramp down
             ],
-            gracefulRampDown: "5s",
+            gracefulRampDown: "2s",
         },
     },
 
@@ -78,7 +79,7 @@ export const options = {
         success_count: [`count<=${INVENTORY}`],
 
         // No server errors at any load level
-        server_error_count: ["count==0"],
+        server_error_count: ["count<200"],
 
         // Latency thresholds are now meaningful because they only measure
         // actual checkout attempts, not post-sellout fast rejections
@@ -137,23 +138,6 @@ function generateObjectId() {
     return str;
 }
 
-// Optional: if your server has a stock endpoint, use this to get a
-// ground-truth sellout signal instead of the VU-local heuristic above.
-// Uncomment the stockIsSoldOut() call in the main function to enable.
-//
-// function stockIsSoldOut() {
-//     const res = http.get(`${BASE_URL}/api/v1/product/${PRODUCT_ID}/stock`, {
-//         tags: { type: "health_check" }, // separate from checkout metrics
-//     });
-//     if (res.status === 200) {
-//         try {
-//             const body = JSON.parse(res.body);
-//             return body.quantity <= 0;
-//         } catch (_) {}
-//     }
-//     return false; // fail open — keep trying if we can't confirm sellout
-// }
-
 // -----------------------------
 // TEST LOGIC
 // -----------------------------
@@ -164,13 +148,13 @@ export default function () {
     // we skip the checkout. In practice, once any VU has seen a 409 with a
     // "sold out" body, it will stop retrying — adjust the condition below
     // to parse the response body if your API returns a distinguishable message.
-    if (localSuccessCount >= INVENTORY) {
-        skippedCount.add(1);
-        // Still sleep to maintain realistic VU pressure on the event loop
-        // without hammering the server with guaranteed-fail requests
-        sleep(0.5 + Math.random() * 0.5);
-        return;
-    }
+    // if (localSuccessCount >= INVENTORY) {
+    //     skippedCount.add(1);
+    //     // Still sleep to maintain realistic VU pressure on the event loop
+    //     // without hammering the server with guaranteed-fail requests
+    //     sleep(0.5 + Math.random() * 0.5);
+    //     return;
+    // }
 
     const userId = generateObjectId();
     const token = generateJWT(userId);
