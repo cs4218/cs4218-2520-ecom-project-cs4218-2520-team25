@@ -30,7 +30,7 @@ scenarios:
     weight: 3 # Runs 30% of the time
     flow:
       - get:
-          url: "/api/v1/product/search/phone" # Replace with a valid search endpoint/keyword
+          url: "/api/v1/product/search/phone" 
       - think: 3
 
   - name: "Login and View Protected Data"
@@ -39,13 +39,13 @@ scenarios:
       - post:
           url: "/api/v1/auth/login"
           json:
-            email: "owen_nly@hotmail.com" # Replace with a valid test user in your DB
-            password: "password"   # Replace with the user's password
+            email: "owen_nly@hotmail.com" 
+            password: "password"   
           capture:
-            - json: "$.token" # Captures the JWT token from the JSON response
-              as: "token"     # Saves it as a variable named 'token'
+            - json: "$.token" 
+              as: "token"   
       - think: 1
       - get:
-          url: "/api/v1/auth/user-auth" # Replace with a route that requires JWT auth
+          url: "/api/v1/auth/user-auth" 
           headers:
-            Authorization: "Bearer {{ token }}" # Injects the captured token
+            Authorization: "Bearer {{ token }}" 
