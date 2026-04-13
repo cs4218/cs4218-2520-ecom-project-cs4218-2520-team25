@@ -1,4 +1,6 @@
 # covai.yaml — project configuration
+# THIS IS A SAMPLE YAML FILE FOR COVAI CONFIG
+# copy this file content into a file called covai.yaml
 
 coverage:
   threshold: 80
@@ -19,9 +21,16 @@ languages:
     test_file_pattern: "{name}.test.ts"
 
 ai:
-  model: "claude-sonnet-4-20250514"
+  default_model: "gemini"
   max_iterations: 3
   max_tokens: 4096
+  models:
+    gemini:
+      model: "gemini-3-flash-preview"
+      api_key: ""
+    claude:
+      model: "claude-sonnet-4-20250514"
+      api_key: ""
 
 rules:
   ignore:

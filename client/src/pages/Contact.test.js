@@ -29,7 +29,7 @@ describe("Contact Page", () => {
     it("renders contact details (email/phone/support)", () => {
         const { getByText } = render(<Contact />);
 
-        expect(getByText(/www\.help@ecommerceapp\.com/i)).toBeInTheDocument();
+        expect(getByText(/help@virtualvault\.com/i)).toBeInTheDocument();
         expect(getByText(/012-3456789/i)).toBeInTheDocument();
         expect(getByText(/1800-0000-0000/i)).toBeInTheDocument();
     });

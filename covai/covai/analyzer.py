@@ -77,6 +77,32 @@ Rules:
 - Handle setup and teardown properly
 - Do NOT include any explanation — output the test file content only
 
+## Import Path Rules (VERY IMPORTANT)
+- The generated test file will be placed under: <project_root>/ai-generated-tests/
+- The original source files remain in their original locations
+
+- You MUST adjust all import paths relative to the new test location
+
+### Path Transformation Rule:
+If original test path is:
+<project_root>/X/Y/test_file
+
+Then generated test path will be:
+<project_root>/ai-generated-tests/X/Y/test_file
+
+Therefore, all imports must go UP from ai-generated-tests before resolving actual modules.
+
+### Example:
+Original:
+import productController from "../../controller/productController";
+
+Generated (correct):
+import productController from "../../../controller/productController";
+
+- Always compute relative paths correctly
+- Never assume absolute imports unless already used in existing tests
+- Prefer mirroring the existing test import style, but FIX the relative depth
+
 Output: A complete, runnable test file. Raw code only, no markdown fences.
 """
 
@@ -102,6 +128,12 @@ Generate tests to improve coverage for the following file.
 
 ## Missing Scenarios to Cover
 {missing_scenarios}
+
+## Generated Test Location
+The generated test file will be located at:
+<project_root>/ai-generated-tests/{file_path}
+
+Ensure all imports are correct relative to this location.
 
 Write tests that cover the scenarios above. Output a complete test file only.
 """

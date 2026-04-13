@@ -4,9 +4,15 @@ import Layout from "./../../components/Layout";
 import { useAuth } from "../../context/auth";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+// Daniel Loh, A0252099X
+// Handle logged out state
+
 const Profile = () => {
   //context
   const [auth, setAuth] = useAuth();
+  const navigate = useNavigate();
   //state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -46,6 +52,17 @@ const Profile = () => {
       }
     } catch (error) {
       console.log(error);
+      const msg = error?.response?.data?.message || "";
+      if (
+        error?.response?.status === 401 ||
+        (typeof msg === "string" && msg.toLowerCase().includes("expired"))
+      ) {
+        toast.error("Session expired. Please login again.");
+        setAuth({});
+        localStorage.removeItem("auth");
+        navigate("/login");
+        return;
+      }
       toast.error("Something went wrong");
     }
   };

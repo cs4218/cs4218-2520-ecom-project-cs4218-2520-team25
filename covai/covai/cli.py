@@ -13,12 +13,15 @@ import argparse
 import json
 import os
 import sys
+import threading
+import time
 from pathlib import Path
 
-from covai.config import load_config, AIConfig
+from covai.config import CovaiConfigError, load_config, validate_ai_config
 from covai.collector import Collector
 from covai.analyzer import Analyzer
 from covai.agents import LLMModel
+from covai.verification import VerificationRunner
 
 
 # ---------------------------------------------------------------------------
@@ -60,6 +63,56 @@ def _print_prompt_preview(prompt, verbose: bool = False):
         print(prompt.user_prompt[:800] + ("..." if len(prompt.user_prompt) > 800 else ""))
 
 
+def _run_with_progress(message: str, action):
+    """Show a live progress indicator while waiting for a blocking action."""
+    stop_event = threading.Event()
+    start_time = time.time()
+
+    def _spinner():
+        frames = ["|", "/", "-", "\\"]
+        idx = 0
+        while not stop_event.is_set():
+            elapsed = int(time.time() - start_time)
+            frame = frames[idx % len(frames)]
+            print(
+                f"\r  {frame} {message} ({elapsed}s elapsed)",
+                end="",
+                flush=True,
+            )
+            idx += 1
+            stop_event.wait(0.2)
+
+    spinner_thread = threading.Thread(target=_spinner, daemon=True)
+    spinner_thread.start()
+    try:
+        result = action()
+    finally:
+        stop_event.set()
+        spinner_thread.join()
+        print("\r" + " " * 80 + "\r", end="", flush=True)
+
+    elapsed = time.time() - start_time
+    print(f"  ✔ {message} completed in {elapsed:.1f}s")
+    return result
+
+
+def _add_model_argument(parser):
+    parser.add_argument(
+        "--model", choices=["gemini", "claude"], default=None,
+        help="AI model provider to use (default: covai.yaml default_model, else gemini)"
+    )
+
+
+def _save_last_analyzed_files(collector: Collector, files) -> None:
+    """Persist the last analyzed source file list for `covai verify`."""
+    tmp_dir = Path(collector.project_root) / "covai" / ".tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "files": sorted({collector.normalize_path(file_coverage.file_path) for file_coverage in files}),
+    }
+    (tmp_dir / "last_analyzed.json").write_text(json.dumps(payload, indent=2))
+
+
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
@@ -87,13 +140,14 @@ def cmd_analyze(args, config, collector, analyzer):
 
     print(f"\n  Found {len(files)} file(s) below threshold:\n")
     print(collector.summary(files))
+    _save_last_analyzed_files(collector, files)
 
     _print_section("🧠 Building AI Analysis Prompts")
     prompts = analyzer.prepare_all(files)
 
     print(f"\n  Prepared {len(prompts)} prompt(s):\n")
     for p in prompts:
-        _print_prompt_preview(p, verbose=args.verbose)
+        _print_prompt_preview(p)
 
     if args.output == "json":
         out = [p.to_dict() for p in prompts]
@@ -131,7 +185,7 @@ def cmd_generate(args, config, collector, analyzer):
     prompt = analyzer.build_generate_prompt(ai_input, missing_scenarios=[])
 
     print(f"\n  ✔ Generation prompt built for: {args.file}")
-    _print_prompt_preview(prompt, verbose=args.verbose)
+    _print_prompt_preview(prompt)
 
     if args.output == "json":
         print("\n" + json.dumps(prompt.to_dict(), indent=2))
@@ -165,6 +219,7 @@ def cmd_run(args, config, collector, analyzer):
 
     print(f"\n  {len(files)} file(s) queued for improvement:\n")
     print(collector.summary(files))
+    _save_last_analyzed_files(collector, files)
 
     # Step 2: Build analysis prompts
     print("\n\n  Step 2/3 — Building analysis prompts (gap identification)...")
@@ -172,7 +227,7 @@ def cmd_run(args, config, collector, analyzer):
     print(f"  ✔ {len(analyze_prompts)} analysis prompt(s) ready")
 
     for p in analyze_prompts:
-        _print_prompt_preview(p, verbose=args.verbose)
+        _print_prompt_preview(p)
 
     # Step 3: Build generation prompts
     # In a real run, you'd call the AI here and use the response.
@@ -182,7 +237,7 @@ def cmd_run(args, config, collector, analyzer):
     print(f"  ✔ {len(generate_prompts)} generation prompt(s) ready")
 
     for p in generate_prompts:
-        _print_prompt_preview(p, verbose=args.verbose)
+        _print_prompt_preview(p)
 
 
     if args.output == "json":
@@ -192,19 +247,28 @@ def cmd_run(args, config, collector, analyzer):
         }
         print("\n" + json.dumps(out, indent=2))
 
-    _print_section("✅ Run pipeline complete")
+    _print_section("✅ Prompt preparation complete")
     print(f"""
   Prepared:
     • {len(analyze_prompts)} analysis prompts  → send to AI to identify gaps
     • {len(generate_prompts)} generation prompts → send to AI to write tests
-
-  Ready for AI integration layer (next step).
 """)
-    
-    # Generate test cases for each prompt
-    for p in generate_prompts:
-        llm_model = LLMModel.create(AIConfig)
-        tests = llm_model.generate(p)
+
+    _print_section("🤖 Generating tests with AI")
+    print(
+        f"\n  Using {config.ai.selected_model} ({config.ai.model}) "
+        f"for {len(generate_prompts)} file(s)."
+    )
+
+    llm_model = LLMModel.create(config.ai)
+
+    for idx, p in enumerate(generate_prompts, start=1):
+        print(f"\n  [{idx}/{len(generate_prompts)}] Preparing request for {p.file_path}")
+        print("  Sending prompt to AI model and waiting for response...")
+        tests = _run_with_progress(
+            f"Generating tests for {p.file_path}",
+            lambda prompt=p: llm_model.generate(prompt),
+        )
 
         data_dir = Path('ai_generated_tests')
         ori_path = Path(p.file_path)
@@ -214,8 +278,26 @@ def cmd_run(args, config, collector, analyzer):
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
         file_path.write_text(tests)
+        print(f"  ✔ Saved generated tests to {file_path}")
 
-    print("Test cases have been generated and stored in ai_generated_tests")
+    print("\n  ✅ Test cases have been generated and stored in ai_generated_tests")
+
+
+def cmd_verify(args, config, collector, analyzer):
+    """
+    covai verify [--file <path>]
+    Run baseline vs candidate Jest coverage verification for analyzed files.
+    """
+    _print_section("🧪 covai verify")
+
+    runner = VerificationRunner(config, collector)
+    payload = runner.run(target_file=args.file)
+
+    if args.output == "json":
+        print(json.dumps(payload, indent=2))
+        return
+
+    runner.print_report(payload)
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -237,38 +319,54 @@ def main():
         "--output", choices=["text", "json"], default="text",
         help="Output format"
     )
-    parser.add_argument(
-        "--verbose", action="store_true",
-        help="Show full prompt content"
-    )
+    # '--verbose' removed: cli no longer supports a verbose flag
     parser.add_argument(
         "--root", default=".",
         help="Project root directory (default: current directory)"
     )
+    _add_model_argument(parser)
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # analyze
     p_analyze = subparsers.add_parser("analyze", help="Analyze coverage gaps")
     p_analyze.add_argument("--file", default=None, help="Target a specific file")
+    _add_model_argument(p_analyze)
 
     # generate
     p_generate = subparsers.add_parser("generate", help="Generate tests for a file")
     p_generate.add_argument("file", help="Source file to generate tests for")
+    _add_model_argument(p_generate)
 
     # run
     p_run = subparsers.add_parser("run", help="Full pipeline: analyze + generate")
     p_run.add_argument("--file", default=None, help="Target a specific file")
+    _add_model_argument(p_run)
+
+    # verify
+    p_verify = subparsers.add_parser(
+        "verify",
+        help="Verify generated tests with baseline vs candidate coverage",
+    )
+    p_verify.add_argument("--file", default=None, help="Target a specific file")
 
     args = parser.parse_args()
 
     # Load config
-    config = load_config(args.config)
+    try:
+        config = load_config(args.config, selected_model=args.model)
+        validate_ai_config(config, require_api_key=args.command == "run")
+    except CovaiConfigError as exc:
+        print(f"\n  ✘ Invalid AI configuration\n\n  {exc}\n")
+        sys.exit(1)
 
     # Detect or override language
     language = args.language or _detect_language(args.config or "covai.yaml")
     config.active_language = language
-    print(f"\n  covai | language: {language} | threshold: {config.coverage.threshold}%")
+    print(
+        f"\n  covai | language: {language} | threshold: {config.coverage.threshold}%"
+        f" | ai: {config.ai.selected_model} ({config.ai.model})"
+    )
 
     # Build shared components
     collector = Collector(config, project_root=args.root)
@@ -279,8 +377,13 @@ def main():
         "analyze": cmd_analyze,
         "generate": cmd_generate,
         "run": cmd_run,
+        "verify": cmd_verify,
     }
-    dispatch[args.command](args, config, collector, analyzer)
+    try:
+        dispatch[args.command](args, config, collector, analyzer)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"\n  ✘ {exc}\n")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

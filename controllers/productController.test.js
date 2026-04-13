@@ -17,6 +17,9 @@ jest.mock("../models/productModel.js", () => {
     ctor.find = jest.fn();
     ctor.findOne = jest.fn();
     ctor.findById = jest.fn();
+    ctor.findOneAndUpdate = jest.fn();
+    ctor.updateOne = jest.fn();
+    ctor.bulkWrite = jest.fn();
     ctor.estimatedDocumentCount = jest.fn();
     ctor.countDocuments = jest.fn();
     return { __esModule: true, default: ctor };
@@ -220,7 +223,7 @@ describe('getProductController', () => {
 
         await getProductController(req, res);
 
-        expect(productModel.find).toHaveBeenCalledWith({});
+        expect(productModel.find).toHaveBeenCalledWith({ quantity: { $gt: 0 } });
         expect(populateMock).toHaveBeenCalledWith("category");
         expect(selectMock).toHaveBeenCalledWith("-photo");
         expect(limitMock).toHaveBeenCalledWith(12)
@@ -580,6 +583,8 @@ describe("updateProductController", () => {
     });
 });
 
+
+// Han Tae Won, A0221684E
 let productFiltersController;
 
 beforeAll(async () => {
@@ -593,10 +598,14 @@ beforeEach(() => {
 });
 
 describe("productFiltersController", () => {
-    // tests for productFiltersController would go here
     test("checked empty and radio empty -> return 200 and find ({})", async () => {
         const fakeProducts = [{ _id: "p1" }];
-        productModel.find.mockResolvedValue(fakeProducts);
+
+        const sortMock = jest.fn().mockResolvedValue(fakeProducts);
+        const populateMock = jest.fn().mockReturnValue({ sort: sortMock });
+        const selectMock = jest.fn().mockReturnValue({ populate: populateMock });
+
+        productModel.find.mockReturnValue({ select: selectMock });
 
         const req = {
             body: {
@@ -609,6 +618,9 @@ describe("productFiltersController", () => {
         await productFiltersController(req, res);
 
         expect(productModel.find).toHaveBeenCalledWith({});
+        expect(selectMock).toHaveBeenCalledWith("-photo");
+        expect(populateMock).toHaveBeenCalledWith("category");
+        expect(sortMock).toHaveBeenCalledWith({ createdAt: -1 });
 
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.send).toHaveBeenCalledWith({
@@ -617,9 +629,14 @@ describe("productFiltersController", () => {
         });
     });
 
-    test("checked non-empty -> find category:checked", async () => {
+    test("checked non-empty -> find category with $in", async () => {
         const fakeProducts = [{ _id: "p2" }];
-        productModel.find.mockResolvedValue(fakeProducts);
+
+        const sortMock = jest.fn().mockResolvedValue(fakeProducts);
+        const populateMock = jest.fn().mockReturnValue({ sort: sortMock });
+        const selectMock = jest.fn().mockReturnValue({ populate: populateMock });
+
+        productModel.find.mockReturnValue({ select: selectMock });
 
         const req = {
             body: {
@@ -628,17 +645,31 @@ describe("productFiltersController", () => {
             },
         };
         const res = makeRes();
+
         await productFiltersController(req, res);
 
         expect(productModel.find).toHaveBeenCalledWith({
-            category: ["c1", "c2"],
+            category: { $in: ["c1", "c2"] },
         });
+        expect(selectMock).toHaveBeenCalledWith("-photo");
+        expect(populateMock).toHaveBeenCalledWith("category");
+        expect(sortMock).toHaveBeenCalledWith({ createdAt: -1 });
+
         expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith({
+            success: true,
+            products: fakeProducts,
+        });
     });
 
     test("radio non-empty -> find price gte/lte", async () => {
         const fakeProducts = [{ _id: "p3" }];
-        productModel.find.mockResolvedValue(fakeProducts);
+
+        const sortMock = jest.fn().mockResolvedValue(fakeProducts);
+        const populateMock = jest.fn().mockReturnValue({ sort: sortMock });
+        const selectMock = jest.fn().mockReturnValue({ populate: populateMock });
+
+        productModel.find.mockReturnValue({ select: selectMock });
 
         const req = {
             body: {
@@ -647,17 +678,31 @@ describe("productFiltersController", () => {
             },
         };
         const res = makeRes();
+
         await productFiltersController(req, res);
 
         expect(productModel.find).toHaveBeenCalledWith({
             price: { $gte: 10, $lte: 50 },
         });
+        expect(selectMock).toHaveBeenCalledWith("-photo");
+        expect(populateMock).toHaveBeenCalledWith("category");
+        expect(sortMock).toHaveBeenCalledWith({ createdAt: -1 });
+
         expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith({
+            success: true,
+            products: fakeProducts,
+        });
     });
 
     test("checked + radio -> find category and price", async () => {
         const fakeProducts = [{ _id: "p4" }];
-        productModel.find.mockResolvedValue(fakeProducts);
+
+        const sortMock = jest.fn().mockResolvedValue(fakeProducts);
+        const populateMock = jest.fn().mockReturnValue({ sort: sortMock });
+        const selectMock = jest.fn().mockReturnValue({ populate: populateMock });
+
+        productModel.find.mockReturnValue({ select: selectMock });
 
         const req = {
             body: {
@@ -666,13 +711,22 @@ describe("productFiltersController", () => {
             },
         };
         const res = makeRes();
+
         await productFiltersController(req, res);
 
         expect(productModel.find).toHaveBeenCalledWith({
-            category: ["c9"],
+            category: { $in: ["c9"] }, 
             price: { $gte: 5, $lte: 15 },
         });
+        expect(selectMock).toHaveBeenCalledWith("-photo");
+        expect(populateMock).toHaveBeenCalledWith("category");
+        expect(sortMock).toHaveBeenCalledWith({ createdAt: -1 });
+
         expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.send).toHaveBeenCalledWith({
+            success: true,
+            products: fakeProducts,
+        });
     });
 
     test("error: find throws -> returns 400 Error WHile Filtering Products", async () => {
@@ -682,6 +736,7 @@ describe("productFiltersController", () => {
 
         const req = { body: { checked: ["c1"], radio: [1, 2] } };
         const res = makeRes();
+
         await productFiltersController(req, res);
 
         expect(res.status).toHaveBeenCalledWith(400);
@@ -694,6 +749,8 @@ describe("productFiltersController", () => {
     });
 });
 
+
+// Han Tae Won, A0221684E
 let productCountController;
 
 beforeAll(async () => {
@@ -717,7 +774,7 @@ describe("productCountController", () => {
 
         await productCountController(req, res);
 
-        expect(productModel.find).toHaveBeenCalledWith({});
+        expect(productModel.find).toHaveBeenCalledWith({ quantity: { $gt: 0 } });
         expect(estMock).toHaveBeenCalledTimes(1);
 
         expect(res.status).toHaveBeenCalledWith(200);
@@ -777,7 +834,7 @@ describe("productListController", () => {
 
         await productListController(req, res);
 
-        expect(productModel.find).toHaveBeenCalledWith({});
+        expect(productModel.find).toHaveBeenCalledWith({ quantity: { $gt: 0 } });
         expect(selectMock).toHaveBeenCalledWith("-photo");
         expect(skipMock).toHaveBeenCalledWith((2 - 1) * 6);
         expect(limitMock).toHaveBeenCalledWith(6);
@@ -848,6 +905,7 @@ describe("searchProductController", () => {
                 { name: { $regex: "phone", $options: "i" } },
                 { description: { $regex: "phone", $options: "i" } },
             ],
+            quantity: { $gt: 0 },
         });
 
         expect(selectMock).toHaveBeenCalledTimes(1);
@@ -885,6 +943,7 @@ describe("searchProductController", () => {
                 { name: { $regex: undefined, $options: "i" } },
                 { description: { $regex: undefined, $options: "i" } },
             ],
+            quantity: { $gt: 0 },
         });
 
         expect(res.json).toHaveBeenCalledWith([]);
@@ -983,6 +1042,7 @@ describe("relatedProductController", () => {
         expect(productModel.find).toHaveBeenCalledWith({
             category: "c1",
             _id: { $ne: "p1" },
+            quantity: { $gt: 0 },
         });
 
         expect(selectMock).toHaveBeenCalledWith("-photo");
@@ -1027,6 +1087,7 @@ describe("relatedProductController", () => {
         expect(productModel.find).toHaveBeenCalledWith({
             category: undefined,
             _id: { $ne: undefined },
+            quantity: { $gt: 0 },
         });
 
         expect(res.status).toHaveBeenCalledWith(200);
@@ -1112,7 +1173,7 @@ describe("productCategoryController", () => {
         await productCategoryController(req, res);
 
         expect(categoryModel.findOne).toHaveBeenCalledWith({ slug: "electronics" });
-        expect(productModel.find).toHaveBeenCalledWith({ category: mockCategory });
+        expect(productModel.find).toHaveBeenCalledWith({ category: mockCategory, quantity: { $gt: 0 } });
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.send).toHaveBeenCalledWith({
             success: true,
@@ -1281,6 +1342,11 @@ describe("brainTreePaymentController", () => {
         saveMock = jest.fn().mockResolvedValue(true);
 
         jest.clearAllMocks();
+        // ensure productModel.find used in pre-check returns a selectable chain
+        productModel.find.mockReturnValue({ select: jest.fn().mockResolvedValue([]) });
+        // ensure atomic reservation mocks exist and succeed by default
+        productModel.findOneAndUpdate.mockResolvedValue({});
+        productModel.updateOne.mockResolvedValue({});
     });
 
     it("should process a successful transaction and save order", async () => {

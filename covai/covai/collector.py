@@ -175,16 +175,17 @@ class Collector:
             )
 
         print(f"  📂 Reading: {coverage_path}")
-        raw = self._parse(coverage_path)
-
-        # Apply ignore rules
-        ignore_patterns = self.config.rules.ignore
-        filtered = [f for f in raw if not _should_ignore(f.file_path, ignore_patterns)]
-
-        ignored_count = len(raw) - len(filtered)
+        filtered, ignored_count = self._filter_coverages(self._parse(coverage_path))
         if ignored_count:
             print(f"  ⏭  Ignored {ignored_count} file(s) matching ignore rules")
 
+        return filtered
+
+    def collect_from_coverage_path(self, coverage_path: str) -> list[FileCoverage]:
+        """Parse coverage from an explicit path and apply normalization + ignore rules."""
+        if not os.path.exists(coverage_path):
+            raise FileNotFoundError(f"Coverage report not found: {coverage_path}")
+        filtered, _ = self._filter_coverages(self._parse(coverage_path))
         return filtered
 
     def collect_below_threshold(self) -> list[FileCoverage]:
@@ -230,6 +231,37 @@ class Collector:
                 f"Unsupported coverage format: {ext}\n"
                 f"Supported: .xml (Cobertura/pytest-cov), .info/.lcov (LCOV/Jest)"
             )
+
+    def _filter_coverages(
+        self,
+        coverages: list[FileCoverage],
+    ) -> tuple[list[FileCoverage], int]:
+        normalized = [
+            FileCoverage(
+                file_path=self.normalize_path(file_coverage.file_path),
+                coverage_pct=file_coverage.coverage_pct,
+                uncovered_lines=list(file_coverage.uncovered_lines),
+                uncovered_branches=list(file_coverage.uncovered_branches),
+                total_lines=file_coverage.total_lines,
+                covered_lines=file_coverage.covered_lines,
+            )
+            for file_coverage in coverages
+        ]
+        ignore_patterns = self.config.rules.ignore
+        filtered = [f for f in normalized if not _should_ignore(f.file_path, ignore_patterns)]
+        return filtered, len(normalized) - len(filtered)
+
+    def normalize_path(self, file_path: str) -> str:
+        """Normalize a path to project-relative form when possible."""
+        normalized = os.path.normpath(file_path)
+        if os.path.isabs(normalized):
+            try:
+                relative = os.path.relpath(normalized, self.project_root)
+            except ValueError:
+                return normalized
+            if not relative.startswith(".."):
+                return os.path.normpath(relative)
+        return normalized
 
     def summary(self, files: list[FileCoverage]) -> str:
         """Return a human-readable summary string."""
