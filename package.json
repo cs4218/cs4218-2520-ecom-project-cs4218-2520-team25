@@ -15,7 +15,8 @@
     "test:ui": "playwright test",
     "test:integration:frontend": "start-server-and-test start http://localhost:6060 \"npm run test:frontend:integration\"",
     "test:frontend:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.frontend.integration.config.js",
-    "test:integration:one": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./jest.integration.config.js --runTestsByPath"
+    "test:integration:one": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./jest.integration.config.js --runTestsByPath",
+    "test:stress": "artillery run stress-testing.yml"
   },
   "keywords": [],
   "author": "RP",
@@ -49,6 +50,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20.12.12",
+    "artillery": "^2.0.30",
     "babel-jest": "^29.7.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^29.7.0",

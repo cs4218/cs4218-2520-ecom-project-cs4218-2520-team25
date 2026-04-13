@@ -1,0 +1,51 @@
+config:
+  # Updated to 6060 to match your server.js default port
+  target: 'http://localhost:6060' 
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm-up"
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 50
+      maxVusers: 200
+      name: "Ramp up"
+    - duration: 120
+      arrivalRate: 50
+      rampTo: 150
+      maxVusers: 1000
+      name: "Stress Test"
+
+scenarios:
+  - name: "Casual Browsing"
+    weight: 10 # Runs 50% of the time (5 out of 10 total weight)
+    flow:
+      - get:
+          url: "/api/v1/category/get-category"
+      - think: 2 # Simulate user pausing to read
+      - get:
+          url: "/api/v1/product/get-product" 
+
+  - name: "Search and View"
+    weight: 3 # Runs 30% of the time
+    flow:
+      - get:
+          url: "/api/v1/product/search/phone" 
+      - think: 3
+
+  - name: "Login and View Protected Data"
+    weight: 2 # Runs 20% of the time
+    flow:
+      - post:
+          url: "/api/v1/auth/login"
+          json:
+            email: "owen_nly@hotmail.com" 
+            password: "password"   
+          capture:
+            - json: "$.token" 
+              as: "token"   
+      - think: 1
+      - get:
+          url: "/api/v1/auth/user-auth" 
+          headers:
+            Authorization: "Bearer {{ token }}" 
