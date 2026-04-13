@@ -38,7 +38,7 @@ describe("Auth Middleware Integration Tests", () => {
       headers: { authorization: token },
     };
     const res = {};
-    const next = jest.fn(); 
+    const next = jest.fn();
 
     // 2. Act
     await requireSignIn(req, res, next);
@@ -49,7 +49,7 @@ describe("Auth Middleware Integration Tests", () => {
     expect(req.user._id).toBe(payload._id);
   });
 
-  test("test_requireSignIn_with_invalid_token_returns_500", async () => {
+  test("test_requireSignIn_with_invalid_token_returns_401", async () => {
     // 1. Arrange
     const req = {
       headers: { authorization: "invalid-token" },
@@ -64,9 +64,9 @@ describe("Auth Middleware Integration Tests", () => {
     await requireSignIn(req, res, next);
 
     // 3. Assert
-    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.status).toHaveBeenCalledWith(401);
     expect(res.send).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Error in signIn middleware" })
+      expect.objectContaining({ message: "Unauthorized: Invalid or expired token" })
     );
     expect(next).not.toHaveBeenCalled();
   });
