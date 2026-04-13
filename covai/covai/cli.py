@@ -147,7 +147,7 @@ def cmd_analyze(args, config, collector, analyzer):
 
     print(f"\n  Prepared {len(prompts)} prompt(s):\n")
     for p in prompts:
-        _print_prompt_preview(p, verbose=args.verbose)
+        _print_prompt_preview(p)
 
     if args.output == "json":
         out = [p.to_dict() for p in prompts]
@@ -185,7 +185,7 @@ def cmd_generate(args, config, collector, analyzer):
     prompt = analyzer.build_generate_prompt(ai_input, missing_scenarios=[])
 
     print(f"\n  ✔ Generation prompt built for: {args.file}")
-    _print_prompt_preview(prompt, verbose=args.verbose)
+    _print_prompt_preview(prompt)
 
     if args.output == "json":
         print("\n" + json.dumps(prompt.to_dict(), indent=2))
@@ -227,7 +227,7 @@ def cmd_run(args, config, collector, analyzer):
     print(f"  ✔ {len(analyze_prompts)} analysis prompt(s) ready")
 
     for p in analyze_prompts:
-        _print_prompt_preview(p, verbose=args.verbose)
+        _print_prompt_preview(p)
 
     # Step 3: Build generation prompts
     # In a real run, you'd call the AI here and use the response.
@@ -237,7 +237,7 @@ def cmd_run(args, config, collector, analyzer):
     print(f"  ✔ {len(generate_prompts)} generation prompt(s) ready")
 
     for p in generate_prompts:
-        _print_prompt_preview(p, verbose=args.verbose)
+        _print_prompt_preview(p)
 
 
     if args.output == "json":
@@ -319,10 +319,7 @@ def main():
         "--output", choices=["text", "json"], default="text",
         help="Output format"
     )
-    parser.add_argument(
-        "--verbose", action="store_true",
-        help="Show full prompt content"
-    )
+    # '--verbose' removed: cli no longer supports a verbose flag
     parser.add_argument(
         "--root", default=".",
         help="Project root directory (default: current directory)"
