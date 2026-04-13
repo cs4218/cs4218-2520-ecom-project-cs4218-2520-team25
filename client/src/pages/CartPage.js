@@ -8,6 +8,9 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import "../styles/CartStyles.css";
 
+// Daniel Loh, A0252099X
+// Modify cartpage to handle errors with checkout and logged out state
+
 const CartPage = () => {
   const [auth, setAuth] = useAuth();
   const [cart, setCart] = useCart();

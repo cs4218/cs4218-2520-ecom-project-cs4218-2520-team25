@@ -360,6 +360,9 @@ export const braintreeTokenController = async (req, res) => {
 };
 
 //payment
+// Daniel Loh, A0252099X
+// Add inventory decrement
+// Concurrency handling to prevent oversellling
 export const brainTreePaymentController = async (req, res) => {
   try {
     const { nonce, cart } = req.body;

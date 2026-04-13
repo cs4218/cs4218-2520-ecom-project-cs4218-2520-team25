@@ -5,6 +5,9 @@ import axios from "axios";
 import Spinner from "../Spinner";
 import toast from "react-hot-toast";
 
+// Daniel Loh, A0252099X
+// Handle logged out state
+
 export default function PrivateRoute() {
     const [ok, setOk] = useState(false);
     const [auth, setAuth] = useAuth();

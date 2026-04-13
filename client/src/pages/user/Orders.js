@@ -7,6 +7,9 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import moment from "moment";
 
+// Daniel Loh, A0252099X
+// Handle logged out state
+
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [auth, setAuth] = useAuth();

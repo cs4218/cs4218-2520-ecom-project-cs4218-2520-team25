@@ -4,6 +4,9 @@ import { Outlet, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Spinner from "../Spinner";
 
+// Daniel Loh, A0252099X
+// Handle logged out state
+
 export default function AdminRoute() {
     const [ok, setOk] = useState(false);
     const [auth, setAuth] = useAuth();

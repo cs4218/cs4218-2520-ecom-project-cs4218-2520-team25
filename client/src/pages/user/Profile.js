@@ -5,6 +5,10 @@ import { useAuth } from "../../context/auth";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
+// Daniel Loh, A0252099X
+// Handle logged out state
+
 const Profile = () => {
   //context
   const [auth, setAuth] = useAuth();
