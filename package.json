@@ -16,7 +16,7 @@
     "test:integration:frontend": "start-server-and-test start http://localhost:6060 \"npm run test:frontend:integration\"",
     "test:frontend:integration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.frontend.integration.config.js",
     "test:integration:one": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./jest.integration.config.js --runTestsByPath",
-    "test:stress": "artillery run artillery.yml"
+    "test:stress": "artillery run stress-testing.yml"
   },
   "keywords": [],
   "author": "RP",
